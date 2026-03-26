@@ -52,6 +52,29 @@
   margin-top: 12px;
 }
 
+.upload-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 10px;
+  cursor: pointer;
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.upload-btn input {
+  display: none;
+}
+
 .media-pick {
   border: 1px solid var(--border-subtle);
   background: #f8fafc;

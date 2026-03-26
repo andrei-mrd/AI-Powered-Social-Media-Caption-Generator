@@ -11,6 +11,10 @@ public sealed record PostDto(
     string Status,
     DateTime CreatedAtUtc,
     DateTime? ScheduledAtUtc,
-    IReadOnlyList<CaptionDto> Captions);
+    string? SelectedCaption,
+    IReadOnlyList<CaptionDto> Captions,
+    IReadOnlyList<MediaDto> Media);
 
 public sealed record CaptionDto(int VariantIndex, string Text, bool IsSelected);
+
+public sealed record MediaDto(Guid Id, string Type, string Url, DateTime CreatedAtUtc);

@@ -1,13 +1,11 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import './components/ProtectedRoute.css'
 import AppLayout from './layouts/AppLayout'
 import HomePage from './pages/HomePage'
 import Dashboard from './pages/Dashboard'
-import Generator from './pages/Generator'
 import MyPosts from './pages/MyPosts'
-import MediaLibrary from './pages/MediaLibrary'
 import CreatePostFlow from './pages/CreatePostFlow'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -26,14 +24,9 @@ function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />
-          <Route path="/generate" element={
-            <ProtectedRoute><Generator /></ProtectedRoute>
-          } />
+          <Route path="/generate" element={<Navigate to="/create-post" replace />} />
           <Route path="/posts" element={
             <ProtectedRoute><MyPosts /></ProtectedRoute>
-          } />
-          <Route path="/media" element={
-            <ProtectedRoute><MediaLibrary /></ProtectedRoute>
           } />
           <Route path="/create-post" element={
             <ProtectedRoute><CreatePostFlow /></ProtectedRoute>

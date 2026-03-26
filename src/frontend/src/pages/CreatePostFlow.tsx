@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Film, ArrowLeft, Sparkles, BookmarkCheck, Tag, Loader2 } from 'lucide-react';
+import { Camera, Film, ArrowLeft, Sparkles, BookmarkCheck, Tag, Loader2, Upload } from 'lucide-react';
 import { readApiError, normalizeError } from '../utils/api';
 import './CreatePostFlow.css';
 
@@ -22,6 +22,8 @@ interface CreateResponse {
 export default function CreatePostFlow() {
   const [step, setStep] = useState<Step>('media');
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [platform, setPlatform] = useState('instagram');
@@ -50,6 +52,31 @@ export default function CreatePostFlow() {
     };
     loadMedia();
   }, []);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files[0];
+    setUploading(true);
+    setUploadError('');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/media/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+      });
+      if (!res.ok) throw new Error(await readApiError(res, 'Upload failed'));
+      const data = await res.json();
+      setMedia(prev => [data, ...prev]);
+      setSelectedMediaId(data.id);
+    } catch (err) {
+      setUploadError(normalizeError(err, 'Upload failed'));
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
 
   const canNextMedia = step === 'media' ? true : true;
   const canNextContent = step === 'content' ? !!postId && selectedCaptionIdx !== null : true;
@@ -179,6 +206,14 @@ export default function CreatePostFlow() {
           <div className="panel-header">
             <h2>Select media</h2>
             <p>Pick an image or clip to pair with your post.</p>
+          </div>
+          <div className="upload-inline">
+            <label className="upload-btn">
+              <Upload size={16} /> {uploading ? 'Uploading…' : 'Upload media'}
+              <input type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime" onChange={handleUpload} disabled={uploading} />
+            </label>
+            {uploadError && <div className="alert error">{uploadError}</div>}
+            <p className="helper">Allowed: jpg, png, webp, mp4, mov. Max 20MB.</p>
           </div>
           <div className="media-grid">
             {media.length === 0 ? (

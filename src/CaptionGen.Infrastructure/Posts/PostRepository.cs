@@ -26,6 +26,7 @@ public sealed class PostRepository : IPostRepository
         return await _db.Posts
             .Where(p => p.UserId == userId)
             .Include(p => p.Captions)
+            .Include(p => p.PostMedia).ThenInclude(pm => pm.MediaAsset)
             .OrderByDescending(p => p.CreatedAtUtc)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -35,7 +36,7 @@ public sealed class PostRepository : IPostRepository
     {
         return await _db.Posts
             .Include(p => p.Captions)
-            .Include(p => p.PostMedia)
+            .Include(p => p.PostMedia).ThenInclude(pm => pm.MediaAsset)
             .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId, cancellationToken);
     }
 
@@ -46,7 +47,7 @@ public sealed class PostRepository : IPostRepository
             .OrderBy(p => p.ScheduledAtUtc)
             .Take(take)
             .Include(p => p.Captions)
-            .Include(p => p.PostMedia)
+            .Include(p => p.PostMedia).ThenInclude(pm => pm.MediaAsset)
             .ToListAsync(cancellationToken);
 
         foreach (var post in posts)

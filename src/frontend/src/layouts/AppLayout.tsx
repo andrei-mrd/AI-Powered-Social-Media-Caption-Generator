@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { PenTool, LayoutDashboard, LogOut, ChevronRight, History, Image } from 'lucide-react';
+import { LayoutDashboard, LogOut, ChevronRight, History, PenTool } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AppLayout.css';
 
@@ -28,17 +28,13 @@ export default function AppLayout() {
           </NavLink>
 
           <span className="nav-section mt-4">Tools</span>
-          <NavLink to="/generate" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <NavLink to="/create-post" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <PenTool size={18} />
-            <span>Generate Post</span>
+            <span>Make a Post</span>
           </NavLink>
           <NavLink to="/posts" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <History size={18} />
             <span>My Posts</span>
-          </NavLink>
-          <NavLink to="/media" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-            <Image size={18} />
-            <span>Media Library</span>
           </NavLink>
         </div>
 

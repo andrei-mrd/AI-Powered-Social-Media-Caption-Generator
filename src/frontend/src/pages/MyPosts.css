@@ -192,6 +192,21 @@
   margin: 0;
 }
 
+.media-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.media-chip {
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
 .schedule-box {
   border: 1px dashed var(--border-subtle);
   border-radius: var(--radius-md);
