@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage'
 import Dashboard from './pages/Dashboard'
 import Generator from './pages/Generator'
 import MyPosts from './pages/MyPosts'
+import MediaLibrary from './pages/MediaLibrary'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -29,6 +30,9 @@ function App() {
           } />
           <Route path="/posts" element={
             <ProtectedRoute><MyPosts /></ProtectedRoute>
+          } />
+          <Route path="/media" element={
+            <ProtectedRoute><MediaLibrary /></ProtectedRoute>
           } />
         </Route>
       </Routes>

@@ -2,9 +2,11 @@ using System.Text;
 using CaptionGen.Application.Auth;
 using CaptionGen.Application.Captions;
 using CaptionGen.Application.Posts;
+using CaptionGen.Application.Media;
 using CaptionGen.Application.Users;
 using CaptionGen.Infrastructure.Auth;
 using CaptionGen.Infrastructure.Captions;
+using CaptionGen.Infrastructure.Media;
 using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
 using CaptionGen.Infrastructure.Users;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -36,9 +39,13 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
+builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
 
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));
+builder.Services.Configure<MediaStorageOptions>(
+    builder.Configuration.GetSection(MediaStorageOptions.SectionName));
 
 builder.Services.AddHttpClient("AiService.Health", (sp, client) =>
 {
@@ -188,6 +195,15 @@ app.UseCors("wasm");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+var mediaOptions = app.Services.GetRequiredService<IOptions<MediaStorageOptions>>().Value;
+var mediaRoot = Path.GetFullPath(mediaOptions.RootPath);
+Directory.CreateDirectory(mediaRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(mediaRoot),
+    RequestPath = "/media"
+});
 
 app.MapControllers();
 app.MapHealthChecks("/health");
