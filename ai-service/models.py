@@ -1,5 +1,7 @@
 from typing import List, Literal, Optional
 
+from pydantic import AnyHttpUrl
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -26,6 +28,11 @@ class CaptionMetadata(BaseModel):
     keywords_to_include: List[str] = Field(default_factory=list)
     forbidden_words: List[str] = Field(default_factory=list)
     count: int = Field(..., ge=1, le=10)
+    media_urls: List[AnyHttpUrl] = Field(default_factory=list)
+    media_cues: Optional[str] = None
+    engagement_score: Optional[int] = None
+    engagement_rationale: Optional[str] = None
+    trace_id: Optional[str] = None
 
 
 class GenerateCaptionRequest(BaseModel):
@@ -43,6 +50,7 @@ class GenerateCaptionRequest(BaseModel):
     brand_voice: Optional[str] = None
     forbidden_words: List[str] = Field(default_factory=list)
     keywords_to_include: List[str] = Field(default_factory=list)
+    media_urls: List[AnyHttpUrl] = Field(default_factory=list)
 
     @field_validator("description")
     @classmethod
@@ -81,11 +89,25 @@ class GenerateCaptionRequest(BaseModel):
                 cleaned.append(stripped)
         return cleaned
 
+    @field_validator("media_urls", mode="after")
+    @classmethod
+    def dedupe_media(cls, value: List[AnyHttpUrl]) -> List[AnyHttpUrl]:
+        seen = set()
+        unique: List[AnyHttpUrl] = []
+        for url in value:
+            key = str(url).strip()
+            if key.lower() in seen:
+                continue
+            seen.add(key.lower())
+            unique.append(url)
+        return unique
+
 
 class GenerateCaptionResponse(BaseModel):
     captions: List[StructuredCaption]
     best_caption_index: int
     metadata: CaptionMetadata
+    trace_id: Optional[str] = None
 
 
 class ImproveCaptionRequest(BaseModel):
@@ -113,3 +135,4 @@ class ImproveCaptionResponse(BaseModel):
     improved_caption: str
     shorter_version: str
     stronger_cta_version: str
+    trace_id: Optional[str] = None

@@ -51,9 +51,10 @@ def test_generate_uses_fallback_second_temperature():
         count=1,
         hashtag_count=5,
     )
-    captions, best_idx = sut.generate_captions(req)
+    captions, best_idx, cues = sut.generate_captions(req)
     assert len(captions) == 1
     assert best_idx == 0
+    assert cues == "" or cues is None
 
 
 def test_generate_raises_on_moderation_flagged():
@@ -108,3 +109,23 @@ def test_improve_caption_validates_response():
     resp = sut.improve_caption(req)
     assert resp.improved_caption == "better"
     assert resp.shorter_version == "short"
+
+
+def test_generate_with_media_uses_cues_once():
+    vision_payload = json.dumps({"cues": ["red shoes", "studio lighting"]})
+    caption_payload = json.dumps(
+        {"captions": [{"text": "ok", "hashtags": ["tag1", "tag2", "tag3", "tag4", "tag5"]}]}
+    )
+    client = FakeOpenAIClient(responses=[vision_payload, caption_payload])
+    sut = CaptionService(client=client)
+    req = GenerateCaptionRequest(
+        description="Valid description of product",
+        platform="instagram",
+        tone="funny",
+        count=1,
+        hashtag_count=5,
+        media_urls=["https://example.com/img.png"],
+    )
+    captions, best_idx, cues = sut.generate_captions(req, trace_id="trace123")
+    assert best_idx == 0
+    assert cues and "red shoes" in cues

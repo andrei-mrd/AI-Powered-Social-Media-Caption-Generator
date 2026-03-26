@@ -1,6 +1,7 @@
 import json
 import logging
-from typing import Any, Dict, Iterable, List, Sequence, Tuple
+import uuid
+from typing import Any, Dict, Iterable, List, Sequence, Tuple, Optional
 
 from openai import OpenAI, OpenAIError
 
@@ -27,6 +28,7 @@ class CaptionService:
         self.client = client
         self.model = model
         self.moderation_model = "omni-moderation-latest"
+        self._last_media_cues: Optional[str] = None
 
     def _moderate(self, description: str) -> None:
         logger.info("moderation:start")
@@ -49,7 +51,7 @@ class CaptionService:
         logger.info("moderation:ok")
 
     def _build_generation_messages(
-        self, req: GenerateCaptionRequest, temperature: float
+        self, req: GenerateCaptionRequest, temperature: float, media_cues: str | None
     ) -> List[dict]:
         style = PLATFORM_STYLES.get(req.platform, "")
         instructions = (
@@ -85,6 +87,8 @@ class CaptionService:
             f"Keywords to include: {', '.join(req.keywords_to_include) or 'none'}\n"
             f"Hashtag count: {req.hashtag_count}"
         )
+        if media_cues:
+            user_prompt += f"\nMedia cues: {media_cues}"
         return [
             {"role": "system", "content": instructions},
             {"role": "user", "content": user_prompt},
@@ -212,11 +216,47 @@ class CaptionService:
             logger.error("scoring:error %s", exc)
             return captions, 0
 
+    def _extract_media_cues(self, media_urls: Sequence[str], trace_id: Optional[str]) -> str:
+        """Optional vision pass to derive visual hooks."""
+        if not media_urls:
+            return ""
+
+        vision_prompt = (
+            "You analyze visual assets for marketing. "
+            "Return JSON with key 'cues' (array of 2-4 short, vivid cues about what you see). "
+            "Be concrete: colors, objects, mood, setting, notable text/logos."
+        )
+
+        content: List[dict] = [{"type": "text", "text": "Extract marketing cues from these visuals."}]
+        for url in media_urls[:4]:
+            content.append({"type": "image_url", "image_url": {"url": url}})
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": vision_prompt},
+                    {"role": "user", "content": content},
+                ],
+                temperature=0.2,
+                max_tokens=200,
+                response_format={"type": "json_object"},
+            )
+            payload = json.loads(response.choices[0].message.content)
+            cues = payload.get("cues", [])
+            cleaned = [str(c).strip() for c in cues if isinstance(c, str) and str(c).strip()]
+            self._last_media_cues = "; ".join(cleaned[:4])
+            return self._last_media_cues or ""
+        except Exception as exc:
+            logger.warning("vision:skip trace_id=%s reason=%s", trace_id, exc)
+            self._last_media_cues = None
+            return ""
+
     def _request_batch(
-        self, req: GenerateCaptionRequest, temperature: float
+        self, req: GenerateCaptionRequest, temperature: float, trace_id: Optional[str], media_cues: str | None
     ) -> Tuple[List[StructuredCaption], int]:
         logger.info("generate:start temp=%s", temperature)
-        messages = self._build_generation_messages(req, temperature)
+        messages = self._build_generation_messages(req, temperature, media_cues)
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -236,19 +276,20 @@ class CaptionService:
         return captions_scored, best_idx
 
     def generate_captions(
-        self, req: GenerateCaptionRequest
-    ) -> Tuple[List[StructuredCaption], int]:
-        logger.info("request:generate platform=%s tone=%s", req.platform, req.tone)
+        self, req: GenerateCaptionRequest, trace_id: Optional[str] = None
+    ) -> Tuple[List[StructuredCaption], int, Optional[str]]:
+        logger.info("request:generate platform=%s tone=%s trace_id=%s", req.platform, req.tone, trace_id or "n/a")
         self._moderate(req.description)
+        media_cues = self._extract_media_cues(req.media_urls, trace_id)
 
         last_error: Exception | None = None
         for temperature in (0.85, 0.45):
             try:
-                captions, best_idx = self._request_batch(req, temperature)
-                logger.info("generate:success temp=%s", temperature)
-                return captions, best_idx
+                captions, best_idx = self._request_batch(req, temperature, trace_id, media_cues)
+                logger.info("generate:success temp=%s trace_id=%s", temperature, trace_id or "n/a")
+                return captions, best_idx, self._last_media_cues
             except ValueError as exc:
-                logger.warning("generate:retry temp=%s reason=%s", temperature, exc)
+                logger.warning("generate:retry temp=%s reason=%s trace_id=%s", temperature, exc, trace_id or "n/a")
                 last_error = exc
                 continue
 
@@ -257,8 +298,8 @@ class CaptionService:
 
         raise ValueError("Caption generation failed. Please try again.")
 
-    def improve_caption(self, req: ImproveCaptionRequest) -> ImproveCaptionResponse:
-        logger.info("request:improve platform=%s tone=%s", req.platform, req.tone)
+    def improve_caption(self, req: ImproveCaptionRequest, trace_id: Optional[str] = None) -> ImproveCaptionResponse:
+        logger.info("request:improve platform=%s tone=%s trace_id=%s", req.platform, req.tone, trace_id or "n/a")
         messages = self._build_improve_messages(req)
         try:
             response = self.client.chat.completions.create(

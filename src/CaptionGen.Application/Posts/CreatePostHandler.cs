@@ -81,7 +81,8 @@ public sealed class CreatePostHandler
             string.IsNullOrWhiteSpace(audience) ? null : audience,
             string.IsNullOrWhiteSpace(brandVoice) ? null : brandVoice,
             forbiddenWords,
-            keywordsToInclude);
+            keywordsToInclude,
+            Array.Empty<string>());
 
         var aiResult = await _ai.GenerateAsync(description, platform, tone, count, options, cancellationToken);
 

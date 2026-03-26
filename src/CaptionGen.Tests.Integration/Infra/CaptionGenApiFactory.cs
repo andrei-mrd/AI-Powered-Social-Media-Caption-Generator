@@ -104,7 +104,20 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
                 .Select(i => $"{platform}:{tone}:{description}:{i}")
                 .ToArray();
 
-            return Task.FromResult<CaptionGenerationResult>(new CaptionGenerationResult(captions, new[] { "#test" }));
+            return Task.FromResult<CaptionGenerationResult>(
+                new CaptionGenerationResult(captions, new[] { "#test" }, 80, "ok", Guid.NewGuid().ToString("N")));
+        }
+
+        public Task<CaptionImprovementResult> ImproveAsync(
+            string caption,
+            string platform,
+            string tone,
+            string language,
+            string goal,
+            CancellationToken cancellationToken = default)
+        {
+            var improved = $"improved:{caption}";
+            return Task.FromResult(new CaptionImprovementResult(improved, improved[..Math.Min(improved.Length, 50)], $"{improved}:cta", Guid.NewGuid().ToString("N")));
         }
     }
 }

@@ -14,6 +14,9 @@ def test_generate_caption_ok(client):
     assert data["metadata"]["platform"] == "instagram"
     assert data["metadata"]["tone"] == "funny"
     assert data["metadata"]["count"] == 3
+    assert "engagement_score" in data["metadata"]
+    assert "engagement_rationale" in data["metadata"]
+    assert data.get("trace_id")
     assert len(data["captions"]) == 3
     assert data["best_caption_index"] == 0
     assert all("text" in c for c in data["captions"])
@@ -77,6 +80,7 @@ def test_improve_caption_ok(client):
     assert data["improved_caption"].startswith("improved:")
     assert data["shorter_version"]
     assert data["stronger_cta_version"]
+    assert data.get("trace_id")
 
 
 def test_improve_caption_validation(client):

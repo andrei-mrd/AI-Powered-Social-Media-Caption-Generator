@@ -1,8 +1,9 @@
 import os
+import uuid
 from typing import Annotated
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from openai import OpenAI, OpenAIError
 
 from caption_service import CaptionService
@@ -39,6 +40,14 @@ def create_app() -> FastAPI:
         version="0.1.0",
     )
 
+    @app.middleware("http")
+    async def add_trace_id(request: Request, call_next):
+        trace_id = request.headers.get("x-request-id") or uuid.uuid4().hex
+        request.state.trace_id = trace_id
+        response = await call_next(request)
+        response.headers["x-request-id"] = trace_id
+        return response
+
     @app.get("/health")
     def health() -> dict:
         """Liveness/readiness probe for orchestrators."""
@@ -53,9 +62,10 @@ def create_app() -> FastAPI:
     def generate_caption(
         payload: GenerateCaptionRequest,
         service: Annotated[CaptionService, Depends(get_service)],
+        request: Request,
     ) -> GenerateCaptionResponse:
         try:
-            captions, best_idx = service.generate_captions(payload)
+            captions, best_idx, media_cues = service.generate_captions(payload, trace_id=request.state.trace_id)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         except OpenAIError as exc:
@@ -77,19 +87,30 @@ def create_app() -> FastAPI:
             keywords_to_include=payload.keywords_to_include,
             forbidden_words=payload.forbidden_words,
             count=payload.count,
+            media_urls=payload.media_urls,
+            media_cues=media_cues,
+            engagement_score=captions[best_idx].score if captions else None,
+            engagement_rationale=captions[best_idx].score_reason if captions else None,
+            trace_id=request.state.trace_id,
         )
 
         return GenerateCaptionResponse(
-            captions=captions, best_caption_index=best_idx, metadata=metadata
+            captions=captions,
+            best_caption_index=best_idx,
+            metadata=metadata,
+            trace_id=request.state.trace_id,
         )
 
     @app.post("/improve-caption", response_model=ImproveCaptionResponse)
     def improve_caption(
         payload: ImproveCaptionRequest,
         service: Annotated[CaptionService, Depends(get_service)],
+        request: Request,
     ) -> ImproveCaptionResponse:
         try:
-            return service.improve_caption(payload)
+            resp = service.improve_caption(payload, trace_id=request.state.trace_id)
+            resp.trace_id = request.state.trace_id
+            return resp
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         except OpenAIError as exc:

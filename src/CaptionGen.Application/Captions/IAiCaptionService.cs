@@ -4,7 +4,10 @@ namespace CaptionGen.Application.Captions;
 
 public sealed record CaptionGenerationResult(
     IReadOnlyList<string> Captions,
-    IReadOnlyList<string> Hashtags);
+    IReadOnlyList<string> Hashtags,
+    int? EngagementScore = null,
+    string? EngagementRationale = null,
+    string? TraceId = null);
 
 public sealed record CaptionGenerationOptions(
     string Language,
@@ -16,7 +19,8 @@ public sealed record CaptionGenerationOptions(
     string? Audience,
     string? BrandVoice,
     IReadOnlyList<string> ForbiddenWords,
-    IReadOnlyList<string> KeywordsToInclude);
+    IReadOnlyList<string> KeywordsToInclude,
+    IReadOnlyList<string> MediaUrls);
 
 public interface IAiCaptionService
 {
@@ -26,6 +30,14 @@ public interface IAiCaptionService
         string tone,
         int count,
         CaptionGenerationOptions options,
+        CancellationToken cancellationToken = default);
+
+    Task<CaptionImprovementResult> ImproveAsync(
+        string caption,
+        string platform,
+        string tone,
+        string language,
+        string goal,
         CancellationToken cancellationToken = default);
 }
 
@@ -41,3 +53,9 @@ public sealed class AiServiceException : Exception
         StatusCode = statusCode;
     }
 }
+
+public sealed record CaptionImprovementResult(
+    string ImprovedCaption,
+    string ShorterVersion,
+    string StrongerCtaVersion,
+    string? TraceId = null);

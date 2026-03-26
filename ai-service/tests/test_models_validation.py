@@ -49,3 +49,18 @@ def test_improve_caption_requires_text():
             platform="instagram",
             tone="funny",
         )
+
+
+def test_media_urls_dedupe_and_validate():
+    req = GenerateCaptionRequest(
+        description="Valid description of product",
+        platform="instagram",
+        tone="funny",
+        count=1,
+        media_urls=[
+            "https://example.com/image.png",
+            "https://example.com/image.png",
+            "https://example.com/other.jpg",
+        ],
+    )
+    assert len(req.media_urls) == 2
