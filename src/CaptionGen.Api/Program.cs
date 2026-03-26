@@ -41,6 +41,7 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
 builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
+builder.Services.AddHostedService<ScheduledPostWorker>();
 
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));

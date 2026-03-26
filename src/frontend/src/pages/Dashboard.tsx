@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { PenTool, Target, Hash, Zap } from 'lucide-react';
+import { PenTool, Target, Hash, Zap, Sparkles } from 'lucide-react';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -21,7 +21,9 @@ export default function Dashboard() {
             <Link to="/generate" className="btn-primary">
               <PenTool size={18} /> Start generating
             </Link>
-            <button className="ghost-btn">Template Library</button>
+            <Link to="/create-post" className="ghost-btn">
+              <Sparkles size={18} /> Make a post
+            </Link>
           </div>
         </div>
 

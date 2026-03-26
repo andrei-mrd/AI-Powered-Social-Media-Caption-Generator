@@ -10,6 +10,7 @@ public sealed record PostDto(
     string Platform,
     string Status,
     DateTime CreatedAtUtc,
+    DateTime? ScheduledAtUtc,
     IReadOnlyList<CaptionDto> Captions);
 
-public sealed record CaptionDto(int VariantIndex, string Text);
+public sealed record CaptionDto(int VariantIndex, string Text, bool IsSelected);

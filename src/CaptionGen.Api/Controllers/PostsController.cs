@@ -32,6 +32,54 @@ public sealed class PostsController : ControllerBase
         return Ok(posts);
     }
 
+    [HttpPost("{id:guid}/schedule")]
+    public async Task<IActionResult> Schedule(Guid id, [FromBody] SchedulePostRequest request, CancellationToken ct)
+    {
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                           ?? User.FindFirstValue("sub")
+                           ?? User.FindFirstValue("id");
+        if (string.IsNullOrWhiteSpace(userIdValue) || !Guid.TryParse(userIdValue, out var userId))
+            return Unauthorized();
+
+        try
+        {
+            await _mediator.Send(new SchedulePostCommand(
+                userId,
+                id,
+                request.ScheduledAtUtc,
+                request.SelectedCaptionIndex,
+                request.MediaIds ?? Array.Empty<Guid>()), ct);
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            const int status = StatusCodes.Status400BadRequest;
+            return StatusCode(status, BuildProblem(status, "Schedule failed", ex.Message));
+        }
+    }
+
+    [HttpPost("{id:guid}/select-caption/{variantIndex:int}")]
+    public async Task<IActionResult> SelectCaption(Guid id, int variantIndex, CancellationToken ct)
+    {
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                           ?? User.FindFirstValue("sub")
+                           ?? User.FindFirstValue("id");
+        if (string.IsNullOrWhiteSpace(userIdValue) || !Guid.TryParse(userIdValue, out var userId))
+            return Unauthorized();
+
+        try
+        {
+            await _mediator.Send(new SelectCaptionCommand(userId, id, variantIndex), ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            const int status = StatusCodes.Status400BadRequest;
+            return StatusCode(status, BuildProblem(status, "Selection failed", ex.Message));
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePostRequest request, CancellationToken ct)
     {
@@ -110,4 +158,11 @@ public sealed class CreatePostRequest
     public IReadOnlyList<string>? ForbiddenWords { get; init; }
     public IReadOnlyList<string>? KeywordsToInclude { get; init; }
     public int Count { get; init; } = 3;
+}
+
+public sealed class SchedulePostRequest
+{
+    public DateTime ScheduledAtUtc { get; init; }
+    public int? SelectedCaptionIndex { get; init; }
+    public IReadOnlyList<Guid>? MediaIds { get; init; }
 }

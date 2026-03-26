@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Generator from './pages/Generator'
 import MyPosts from './pages/MyPosts'
 import MediaLibrary from './pages/MediaLibrary'
+import CreatePostFlow from './pages/CreatePostFlow'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -33,6 +34,9 @@ function App() {
           } />
           <Route path="/media" element={
             <ProtectedRoute><MediaLibrary /></ProtectedRoute>
+          } />
+          <Route path="/create-post" element={
+            <ProtectedRoute><CreatePostFlow /></ProtectedRoute>
           } />
         </Route>
       </Routes>

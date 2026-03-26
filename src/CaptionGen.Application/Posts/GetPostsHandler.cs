@@ -22,9 +22,10 @@ public sealed class GetPostsHandler : IRequestHandler<GetPostsQuery, IReadOnlyLi
                 p.Platform,
                 p.Status,
                 p.CreatedAtUtc,
+                p.ScheduledAtUtc,
                 p.Captions
                     .OrderBy(c => c.VariantIndex)
-                    .Select(c => new CaptionDto(c.VariantIndex, c.Text))
+                    .Select(c => new CaptionDto(c.VariantIndex, c.Text, c.IsSelected))
                     .ToList()))
             .ToList();
     }

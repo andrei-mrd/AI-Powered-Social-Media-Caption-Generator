@@ -30,4 +30,38 @@ public sealed class PostRepository : IPostRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<Post?> GetByIdWithCaptionsAndMediaAsync(Guid postId, Guid userId, CancellationToken cancellationToken)
+    {
+        return await _db.Posts
+            .Include(p => p.Captions)
+            .Include(p => p.PostMedia)
+            .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Post>> AcquireDueScheduledAsync(DateTime utcNow, int take, CancellationToken cancellationToken)
+    {
+        var posts = await _db.Posts
+            .Where(p => p.Status == "scheduled" && p.ScheduledAtUtc <= utcNow)
+            .OrderBy(p => p.ScheduledAtUtc)
+            .Take(take)
+            .Include(p => p.Captions)
+            .Include(p => p.PostMedia)
+            .ToListAsync(cancellationToken);
+
+        foreach (var post in posts)
+        {
+            post.Status = "publishing";
+        }
+
+        if (posts.Count > 0)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        return posts;
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken)
+        => _db.SaveChangesAsync(cancellationToken);
 }
