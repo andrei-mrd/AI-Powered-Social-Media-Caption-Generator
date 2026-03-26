@@ -6,7 +6,7 @@
 
 .glass-sidebar {
   width: 260px;
-  background: var(--bg-surface);
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
   border-right: 1px solid var(--border-subtle);
   padding: 1.5rem;
   display: flex;
@@ -28,6 +28,7 @@
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .brand-dot {
@@ -35,6 +36,7 @@
   height: 12px;
   border-radius: 50%;
   background: var(--text-primary);
+  box-shadow: 0 0 0 6px rgba(17, 24, 39, 0.08);
 }
 
 .nav-links {
@@ -69,13 +71,15 @@
 }
 
 .nav-item:hover {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
   color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .nav-item.active {
   background: var(--text-primary);
   color: #ffffff;
+  box-shadow: var(--shadow-glow);
 }
 
 .nav-footer {
@@ -137,6 +141,7 @@
 
 .logout-btn:hover {
   background: #ffe4e6;
+  transform: translateY(-1px);
 }
 
 .content-area {
@@ -145,4 +150,5 @@
   padding: 3rem;
   display: flex;
   flex-direction: column;
+  background: radial-gradient(circle at top left, rgba(37,99,235,0.04), transparent 30%), radial-gradient(circle at 80% 20%, rgba(124,58,237,0.05), transparent 25%);
 }

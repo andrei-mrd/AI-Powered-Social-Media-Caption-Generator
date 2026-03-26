@@ -188,14 +188,28 @@ export default function CreatePostFlow() {
         {selectedCaptionIdx === idx && <span className="check">Chosen</span>}
       </div>
       <p>{cap}</p>
+      <div className="card-meta">Tap to choose • Emojis allowed • Hashtags auto</div>
     </div>
   )), [captions, selectedCaptionIdx]);
 
   return (
     <div className="flow-shell animate-fade-in">
+      <div className="flow-hero">
+        <div>
+          <p className="eyebrow">Create & ship</p>
+          <h1>Build a post in three playful steps</h1>
+          <p className="muted">Pick media, generate captions, and lock in your go-live time.</p>
+        </div>
+        <div className="orbit">
+          <span className={step === 'media' ? 'dot active' : 'dot'} />
+          <span className={step === 'content' ? 'dot active' : 'dot'} />
+          <span className={step === 'schedule' ? 'dot active' : 'dot'} />
+        </div>
+      </div>
+
       <div className="flow-steps">
         <div className={`flow-step ${step === 'media' ? 'active' : ''}`}>Media</div>
-        <div className={`flow-step ${step === 'content' ? 'active' : ''}`}>Content</div>
+        <div className={`flow-step ${step === 'content' ? 'active' : ''}`}>Caption</div>
         <div className={`flow-step ${step === 'schedule' ? 'active' : ''}`}>Schedule</div>
       </div>
 

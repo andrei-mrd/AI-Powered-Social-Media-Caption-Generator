@@ -38,17 +38,7 @@ public sealed class SchedulePostHandler : IRequestHandler<SchedulePostCommand>
         if (post.Status is "publishing" or "published")
             throw new InvalidOperationException("Published posts cannot be rescheduled.");
 
-        var scheduled = request.ScheduledAtUtc;
-        if (scheduled.Kind == DateTimeKind.Unspecified)
-        {
-            // Treat incoming local wall time as-is but mark it UTC to satisfy the DB.
-            scheduled = DateTime.SpecifyKind(scheduled, DateTimeKind.Utc);
-        }
-        else if (scheduled.Kind == DateTimeKind.Local)
-        {
-            // Preserve wall time by keeping ticks and marking as UTC (avoid shifting).
-            scheduled = new DateTime(scheduled.Ticks, DateTimeKind.Utc);
-        }
+        var scheduled = ToUtcFromRomaniaLocal(request.ScheduledAtUtc);
 
         if (scheduled <= DateTime.UtcNow.AddMinutes(-1))
             throw new InvalidOperationException("Schedule time must be in the future.");
@@ -77,6 +67,40 @@ public sealed class SchedulePostHandler : IRequestHandler<SchedulePostCommand>
         post.Status = "scheduled";
 
         await _posts.SaveChangesAsync(cancellationToken);
+    }
+
+    private static DateTime ToUtcFromRomaniaLocal(DateTime value)
+    {
+        var tzIds = new[] { "Europe/Bucharest", "GTB Standard Time" };
+        TimeZoneInfo? tz = null;
+        foreach (var id in tzIds)
+        {
+            try
+            {
+                tz = TimeZoneInfo.FindSystemTimeZoneById(id);
+                break;
+            }
+            catch
+            {
+                // try next
+            }
+        }
+
+        // Treat unspecified/local as Romania local time
+        var local = value;
+        if (value.Kind == DateTimeKind.Utc)
+            return value;
+
+        if (value.Kind == DateTimeKind.Unspecified)
+            local = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
+
+        if (tz is not null)
+        {
+            return TimeZoneInfo.ConvertTimeToUtc(local, tz);
+        }
+
+        // Fallback: assume server local offset ~ Romania (preserve wall time ticks)
+        return new DateTime(local.Ticks, DateTimeKind.Utc);
     }
 }
 

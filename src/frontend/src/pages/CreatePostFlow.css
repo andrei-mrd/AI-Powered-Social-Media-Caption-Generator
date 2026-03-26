@@ -1,9 +1,76 @@
+:root {
+  --flow-gradient: linear-gradient(135deg, #111827, #1f2937 35%, #0ea5e9 100%);
+}
+
 .flow-shell {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
+}
+
+.flow-hero {
+  background: var(--flow-gradient);
+  color: #e5e7eb;
+  padding: 18px 20px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), transparent 45%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+
+.flow-hero h1 {
+  margin: 0;
+  color: #f3f4f6;
+}
+
+.flow-hero .muted {
+  margin: 6px 0 0;
+  color: #cbd5e1;
+}
+
+.orbit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  min-width: 90px;
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.35);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.dot.active {
+  background: #a5b4fc;
+  transform: scale(1.2);
 }
 
 .flow-steps {
@@ -14,18 +81,20 @@
 
 .flow-step {
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--border-subtle);
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   background: #f8fafc;
+  box-shadow: var(--shadow-sm);
 }
 
 .flow-step.active {
   color: #111827;
-  background: #eef2ff;
+  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
   border-color: #c7d2fe;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.18);
 }
 
 .panel {
@@ -34,6 +103,7 @@
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: var(--shadow-sm);
+  animation: floatIn 0.25s ease;
 }
 
 .panel-header h2 {
@@ -85,11 +155,13 @@
   gap: 8px;
   align-items: flex-start;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .media-pick.active {
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  transform: translateY(-2px);
 }
 
 .thumb {
@@ -116,6 +188,7 @@
   padding: 10px 14px;
   cursor: pointer;
   font-weight: 600;
+  transition: transform 0.15s ease;
 }
 
 .btn-primary {
@@ -126,6 +199,16 @@
   padding: 10px 14px;
   cursor: pointer;
   font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
 }
 
 .form-grid {
@@ -168,11 +251,13 @@
   padding: 12px;
   background: #f8fafc;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .cp-card.selected {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px);
 }
 
 .cp-card-header {
@@ -193,6 +278,12 @@
 .check {
   font-size: 0.8rem;
   color: #16a34a;
+}
+
+.card-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
 }
 
 .selected-caption-box {
@@ -239,4 +330,9 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes floatIn {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
