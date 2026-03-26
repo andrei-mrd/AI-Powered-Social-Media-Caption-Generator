@@ -1,0 +1,17 @@
+@CaptionGen.Api_HostAddress = http://localhost:5157
+
+GET {{CaptionGen.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+# Requires authentication cookie and the Python AI service running on http://localhost:8001
+POST {{CaptionGen.Api_HostAddress}}/api/posts
+Content-Type: application/json
+
+{
+  "description": "Behind-the-scenes of our eco-friendly packaging line",
+  "platform": "instagram",
+  "tone": "inspirational",
+  "count": 3
+}

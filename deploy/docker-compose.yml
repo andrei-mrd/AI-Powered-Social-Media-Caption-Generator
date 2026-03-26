@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: captiongen-db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: captiongen
+    ports:
+      - "5432:5432"
+    volumes:
+      - captiongen_pgdata:/var/lib/postgresql/data
+
+volumes:
+  captiongen_pgdata:
