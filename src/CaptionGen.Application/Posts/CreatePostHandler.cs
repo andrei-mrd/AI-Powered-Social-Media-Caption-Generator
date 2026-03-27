@@ -102,13 +102,17 @@ public sealed class CreatePostHandler
         var createdAt = DateTime.UtcNow;
         var captions = aiResult.Captions
             .Take(count)
-            .Select((text, idx) => new Caption
+            .Select((variant, idx) => new Caption
             {
                 Id = Guid.NewGuid(),
                 PostId = post.Id,
                 Post = post,
                 VariantIndex = idx,
-                Text = text,
+                Text = variant.Text,
+                HashtagsText = string.Join(" ", variant.Hashtags ?? Array.Empty<string>()),
+                Hook = variant.Hook,
+                Cta = variant.Cta,
+                Score = variant.Score,
                 CreatedAtUtc = createdAt
             })
             .ToList();
@@ -117,6 +121,19 @@ public sealed class CreatePostHandler
 
         await _posts.AddAsync(post, cancellationToken);
 
-        return new CreatePostResponse(post.Id, aiResult.Captions, aiResult.Hashtags);
+        var captionDtos = captions
+            .OrderBy(c => c.VariantIndex)
+            .Select(c => new CaptionVariantDto(
+                c.VariantIndex,
+                c.Text,
+                (c.HashtagsText ?? string.Empty)
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToArray(),
+                c.Hook,
+                c.Cta,
+                c.Score))
+            .ToList();
+
+        return new CreatePostResponse(post.Id, captionDtos, aiResult.Hashtags, aiResult.TraceId);
     }
 }

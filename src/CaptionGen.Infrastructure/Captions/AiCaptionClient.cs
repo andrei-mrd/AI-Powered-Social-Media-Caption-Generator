@@ -97,8 +97,18 @@ public sealed class AiCaptionClient : IAiCaptionService
             throw new AiServiceException("AI service returned no hashtags.", (int)response.StatusCode);
         }
 
-        var captionTexts = data.Captions.Select(c => c.Text).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
-        if (captionTexts.Count == 0)
+        var variants = data.Captions
+            .Select((c, idx) => new GeneratedCaption(
+                c.Text,
+                c.Hashtags ?? new List<string>(),
+                string.IsNullOrWhiteSpace(c.Hook) ? null : c.Hook,
+                string.IsNullOrWhiteSpace(c.Cta) ? null : c.Cta,
+                c.Score,
+                c.ScoreReason))
+            .Where(v => !string.IsNullOrWhiteSpace(v.Text))
+            .ToList();
+
+        if (variants.Count == 0)
         {
             throw new AiServiceException("AI service returned empty caption texts.", (int)response.StatusCode);
         }
@@ -107,7 +117,7 @@ public sealed class AiCaptionClient : IAiCaptionService
         var engagementReason = data.Metadata?.EngagementRationale;
         var outgoingTrace = data.TraceId ?? data.Metadata?.TraceId ?? traceId;
 
-        return new CaptionGenerationResult(captionTexts, bestHashtags, engagementScore, engagementReason, outgoingTrace);
+        return new CaptionGenerationResult(variants, bestHashtags, engagementScore, engagementReason, outgoingTrace);
     }
 
     public async Task<CaptionImprovementResult> ImproveAsync(
@@ -218,7 +228,13 @@ public sealed class AiCaptionClient : IAiCaptionService
         CaptionMetadataDto? Metadata,
         [property: JsonPropertyName("trace_id")] string? TraceId);
 
-    private sealed record CaptionDto(string Text, List<string>? Hashtags);
+    private sealed record CaptionDto(
+        string Text,
+        List<string>? Hashtags,
+        string? Hook,
+        string? Cta,
+        int? Score,
+        [property: JsonPropertyName("score_reason")] string? ScoreReason);
 
     private sealed record CaptionMetadataDto(
         [property: JsonPropertyName("engagement_score")] int? EngagementScore,

@@ -12,9 +12,18 @@ public sealed record PostDto(
     DateTime CreatedAtUtc,
     DateTime? ScheduledAtUtc,
     string? SelectedCaption,
+    IReadOnlyList<string> SelectedHashtags,
+    int? SelectedScore,
     IReadOnlyList<CaptionDto> Captions,
     IReadOnlyList<MediaDto> Media);
 
-public sealed record CaptionDto(int VariantIndex, string Text, bool IsSelected);
+public sealed record CaptionDto(
+    int VariantIndex,
+    string Text,
+    bool IsSelected,
+    IReadOnlyList<string> Hashtags,
+    string? Hook,
+    string? Cta,
+    int? Score);
 
 public sealed record MediaDto(Guid Id, string Type, string Url, DateTime CreatedAtUtc);

@@ -13,10 +13,20 @@ interface MediaItem {
   createdAtUtc: string;
 }
 
+interface CaptionVariant {
+  variantIndex: number;
+  text: string;
+  hashtags: string[];
+  hook?: string | null;
+  cta?: string | null;
+  score?: number | null;
+}
+
 interface CreateResponse {
   id: string;
-  captions: string[];
+  captions: CaptionVariant[];
   hashtags: string[];
+  traceId?: string;
 }
 
 export default function CreatePostFlow() {
@@ -29,9 +39,18 @@ export default function CreatePostFlow() {
   const [platform, setPlatform] = useState('instagram');
   const [tone, setTone] = useState('professional');
   const [length, setLength] = useState('medium');
+  const [language, setLanguage] = useState('en');
+  const [goal, setGoal] = useState('awareness');
+  const [includeEmojis, setIncludeEmojis] = useState(true);
+  const [includeCta, setIncludeCta] = useState(true);
+  const [hashtagCount, setHashtagCount] = useState(8);
+  const [audience, setAudience] = useState('');
+  const [brandVoice, setBrandVoice] = useState('');
+  const [keywordsToInclude, setKeywordsToInclude] = useState('');
+  const [forbiddenWords, setForbiddenWords] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState('');
-  const [captions, setCaptions] = useState<string[]>([]);
+  const [captions, setCaptions] = useState<CaptionVariant[]>([]);
   const [selectedCaptionIdx, setSelectedCaptionIdx] = useState<number | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const [scheduleAt, setScheduleAt] = useState('');
@@ -113,19 +132,29 @@ export default function CreatePostFlow() {
           description,
           platform,
           tone: tone.toLowerCase(),
-          language: 'en',
-          goal: 'awareness',
+          language: language || 'en',
+          goal: goal || 'awareness',
           captionLength: length.toLowerCase(),
-          includeEmojis: true,
-          includeCta: true,
-          hashtagCount: 8,
+          includeEmojis,
+          includeCta,
+          hashtagCount: hashtagCount || 8,
+          audience: audience || null,
+          brandVoice: brandVoice || null,
+          keywordsToInclude: keywordsToInclude
+            .split(',')
+            .map(k => k.trim())
+            .filter(Boolean),
+          forbiddenWords: forbiddenWords
+            .split(',')
+            .map(k => k.trim())
+            .filter(Boolean),
           count: 3
         })
       });
       if (!res.ok) throw new Error(await readApiError(res, 'Generation failed'));
       const data: CreateResponse = await res.json();
       setPostId(data.id);
-      setCaptions(data.captions);
+      setCaptions(data.captions ?? []);
       setSelectedCaptionIdx(0);
     } catch (err) {
       setGenerateError(normalizeError(err, 'Unable to generate captions'));
@@ -187,8 +216,10 @@ export default function CreatePostFlow() {
         <span className="badge">Option {idx + 1}</span>
         {selectedCaptionIdx === idx && <span className="check">Chosen</span>}
       </div>
-      <p>{cap}</p>
-      <div className="card-meta">Tap to choose • Emojis allowed • Hashtags auto</div>
+      <p>{cap.text}</p>
+      <div className="card-meta">
+        {cap.score ? `Score ${cap.score}` : 'Tap to choose'} • {cap.hashtags?.slice(0, 4).join(' ')}
+      </div>
     </div>
   )), [captions, selectedCaptionIdx]);
 
@@ -298,6 +329,89 @@ export default function CreatePostFlow() {
                 </select>
               </label>
             </div>
+            <div className="form-row">
+              <label className="form-block">
+                <span>Language</span>
+                <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                  <option value="en">English</option>
+                  <option value="ro">Română</option>
+                </select>
+              </label>
+              <label className="form-block">
+                <span>Goal</span>
+                <select value={goal} onChange={(e) => setGoal(e.target.value)}>
+                  <option value="awareness">Awareness</option>
+                  <option value="engagement">Engagement</option>
+                  <option value="sales">Sales</option>
+                </select>
+              </label>
+              <label className="form-block">
+                <span>Hashtags (count)</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={20}
+                  value={hashtagCount}
+                  onChange={(e) => setHashtagCount(Number(e.target.value))}
+                />
+              </label>
+            </div>
+            <div className="form-row">
+              <label className="form-block checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={includeEmojis}
+                  onChange={(e) => setIncludeEmojis(e.target.checked)}
+                />
+                <span>Include emojis</span>
+              </label>
+              <label className="form-block checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={includeCta}
+                  onChange={(e) => setIncludeCta(e.target.checked)}
+                />
+                <span>Include CTA</span>
+              </label>
+              <label className="form-block">
+                <span>Audience</span>
+                <input
+                  type="text"
+                  value={audience}
+                  onChange={(e) => setAudience(e.target.value)}
+                  placeholder="e.g. eco-conscious buyers"
+                />
+              </label>
+            </div>
+            <div className="form-row">
+              <label className="form-block">
+                <span>Brand voice</span>
+                <input
+                  type="text"
+                  value={brandVoice}
+                  onChange={(e) => setBrandVoice(e.target.value)}
+                  placeholder="e.g. witty, concise"
+                />
+              </label>
+              <label className="form-block">
+                <span>Keywords to include (comma-separated)</span>
+                <textarea
+                  rows={2}
+                  value={keywordsToInclude}
+                  onChange={(e) => setKeywordsToInclude(e.target.value)}
+                  placeholder="eco, packaging, recycled"
+                />
+              </label>
+              <label className="form-block">
+                <span>Forbidden words (comma-separated)</span>
+                <textarea
+                  rows={2}
+                  value={forbiddenWords}
+                  onChange={(e) => setForbiddenWords(e.target.value)}
+                  placeholder="cheap, discount"
+                />
+              </label>
+            </div>
             {generateError && <div className="alert error">{generateError}</div>}
             <div className="flow-actions">
               <button type="button" className="btn-secondary" onClick={goPrev}><ArrowLeft size={14} /> Back</button>
@@ -340,7 +454,16 @@ export default function CreatePostFlow() {
               <span>Selected caption</span>
               <div className="selected-caption-box">
                 {selectedCaptionIdx !== null && captions[selectedCaptionIdx]
-                  ? <><Tag size={14} /> {captions[selectedCaptionIdx]}</>
+                  ? (
+                    <>
+                      <Tag size={14} /> {captions[selectedCaptionIdx].text}
+                      {captions[selectedCaptionIdx].hashtags?.length ? (
+                        <div className="selected-caption-hashtags">
+                          {captions[selectedCaptionIdx].hashtags.map((h, i) => <span key={i} className="badge">{h}</span>)}
+                        </div>
+                      ) : null}
+                    </>
+                  )
                   : 'Pick a caption first'}
               </div>
             </label>

@@ -24,8 +24,15 @@ public sealed class CreatePostHandlerTests
                 It.IsAny<CaptionGenerationOptions>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CaptionGenerationResult(
-                new[] { "c1", "c2", "c3" },
-                new[] { "#a", "#b" }));
+                new[]
+                {
+                    new GeneratedCaption("c1", new[] { "#a", "#b" }, "hook1", "cta1", 90),
+                    new GeneratedCaption("c2", new[] { "#c", "#d" }, "hook2", "cta2", 85)
+                },
+                new[] { "#a", "#b" },
+                88,
+                "reason",
+                "trace-1"));
 
         posts.Setup(x => x.AddAsync(It.Is<Post>(p =>
                 p.UserId == userId &&
@@ -42,8 +49,10 @@ public sealed class CreatePostHandlerTests
             new CreatePostCommand(userId, "  hello  ", " Instagram ", " FUNNY ", "en", "reach", "medium", true, true, 8, null, null, Array.Empty<string>(), Array.Empty<string>(), 2),
             CancellationToken.None);
 
-        response.Captions.Should().ContainInOrder("c1", "c2", "c3");
+        response.Captions.Select(c => c.Text).Should().ContainInOrder("c1", "c2");
+        response.Captions.First().Hashtags.Should().ContainInOrder("#a", "#b");
         response.Hashtags.Should().ContainInOrder("#a", "#b");
+        response.TraceId.Should().Be("trace-1");
         response.Id.Should().NotBeEmpty();
 
         ai.VerifyAll();

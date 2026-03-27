@@ -26,9 +26,9 @@ public sealed class GetPostsHandlerTests
             CreatedAtUtc = DateTime.UtcNow,
             Captions = new List<Caption>
             {
-                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 2, Text = "c2", CreatedAtUtc = DateTime.UtcNow },
-                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 0, Text = "c0", CreatedAtUtc = DateTime.UtcNow },
-                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 1, Text = "c1", CreatedAtUtc = DateTime.UtcNow }
+                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 2, Text = "c2", HashtagsText = "#c2", Score = 70, CreatedAtUtc = DateTime.UtcNow },
+                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 0, Text = "c0", HashtagsText = "#c0", Score = 90, CreatedAtUtc = DateTime.UtcNow, IsSelected = true },
+                new() { Id = Guid.NewGuid(), PostId = Guid.NewGuid(), VariantIndex = 1, Text = "c1", HashtagsText = "#c1", Score = 80, CreatedAtUtc = DateTime.UtcNow }
             }
         };
 
@@ -42,6 +42,8 @@ public sealed class GetPostsHandlerTests
         result.Should().HaveCount(1);
         result[0].Captions.Select(c => c.VariantIndex).Should().ContainInOrder(0, 1, 2);
         result[0].Captions.Select(c => c.Text).Should().ContainInOrder("c0", "c1", "c2");
+        result[0].SelectedHashtags.Should().Contain("#c0");
+        result[0].SelectedScore.Should().Be(90);
         posts.VerifyAll();
     }
 }

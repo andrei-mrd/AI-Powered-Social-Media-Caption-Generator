@@ -10,8 +10,11 @@ interface PostDto {
   status: string;
   createdAtUtc: string;
   selectedCaption: string | null;
+  selectedHashtags: string[];
+  selectedScore?: number | null;
   scheduledAtUtc?: string | null;
   media: MediaItem[];
+  captions: CaptionDto[];
 }
 
 interface MediaItem {
@@ -20,6 +23,16 @@ interface MediaItem {
   url: string;
   createdAtUtc: string;
   captionText?: string;
+}
+
+interface CaptionDto {
+  variantIndex: number;
+  text: string;
+  isSelected: boolean;
+  hashtags: string[];
+  hook?: string | null;
+  cta?: string | null;
+  score?: number | null;
 }
 
 export default function MyPosts() {
@@ -117,6 +130,12 @@ export default function MyPosts() {
                   <div className="caption-entry">
                     <span className="variant-label">Caption</span>
                     <p className="caption-body">{post.selectedCaption ?? 'Not selected yet'}</p>
+                    {post.selectedScore ? <span className="badge score">Score {post.selectedScore}</span> : null}
+                    {post.selectedHashtags?.length ? (
+                      <div className="hashtags-row">
+                        {post.selectedHashtags.map((h, i) => <span key={i} className="badge">{h}</span>)}
+                      </div>
+                    ) : null}
                   </div>
                   {post.media?.length ? (
                     <div className="media-grid-thumbs">

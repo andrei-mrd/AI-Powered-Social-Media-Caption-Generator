@@ -3,11 +3,19 @@ using System.Collections.Generic;
 namespace CaptionGen.Application.Captions;
 
 public sealed record CaptionGenerationResult(
-    IReadOnlyList<string> Captions,
+    IReadOnlyList<GeneratedCaption> Captions,
     IReadOnlyList<string> Hashtags,
     int? EngagementScore = null,
     string? EngagementRationale = null,
     string? TraceId = null);
+
+public sealed record GeneratedCaption(
+    string Text,
+    IReadOnlyList<string> Hashtags,
+    string? Hook,
+    string? Cta,
+    int? Score,
+    string? ScoreReason = null);
 
 public sealed record CaptionGenerationOptions(
     string Language,

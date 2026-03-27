@@ -20,22 +20,41 @@ public sealed class GetPostsHandler : IRequestHandler<GetPostsQuery, IReadOnlyLi
         var items = await _posts.GetByUserWithCaptionsAsync(request.UserId, cancellationToken);
 
         return items
-            .Select(p => new PostDto(
-                p.Id,
-                p.Platform,
-                p.Status,
-                p.CreatedAtUtc,
-                p.ScheduledAtUtc,
-                p.Captions.FirstOrDefault(c => c.IsSelected)?.Text ?? p.Captions.OrderBy(c => c.VariantIndex).FirstOrDefault()?.Text,
-                p.Captions
-                    .OrderBy(c => c.VariantIndex)
-                    .Select(c => new CaptionDto(c.VariantIndex, c.Text, c.IsSelected))
-                    .ToList(),
-                p.PostMedia
-                    .Select(pm => pm.MediaAsset)
-                    .Where(m => m != null)
-                    .Select(m => new MediaDto(m!.Id, m.Type, _storage.BuildPublicUrl(m.StoragePath), m.CreatedAtUtc))
-                    .ToList()))
+            .Select(p =>
+            {
+                var orderedCaptions = p.Captions.OrderBy(c => c.VariantIndex).ToList();
+                var selected = orderedCaptions.FirstOrDefault(c => c.IsSelected) ?? orderedCaptions.FirstOrDefault();
+                var selectedHashtags = (selected?.HashtagsText ?? string.Empty)
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToArray();
+
+                return new PostDto(
+                    p.Id,
+                    p.Platform,
+                    p.Status,
+                    p.CreatedAtUtc,
+                    p.ScheduledAtUtc,
+                    selected?.Text,
+                    selectedHashtags,
+                    selected?.Score,
+                    orderedCaptions
+                        .Select(c => new CaptionDto(
+                            c.VariantIndex,
+                            c.Text,
+                            c.IsSelected,
+                            (c.HashtagsText ?? string.Empty)
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                .ToArray(),
+                            c.Hook,
+                            c.Cta,
+                            c.Score))
+                        .ToList(),
+                    p.PostMedia
+                        .Select(pm => pm.MediaAsset)
+                        .Where(m => m != null)
+                        .Select(m => new MediaDto(m!.Id, m.Type, _storage.BuildPublicUrl(m.StoragePath), m.CreatedAtUtc))
+                        .ToList());
+            })
             .ToList();
     }
 }

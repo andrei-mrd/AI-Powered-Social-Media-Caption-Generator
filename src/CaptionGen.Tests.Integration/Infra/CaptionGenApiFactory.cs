@@ -101,7 +101,12 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
             CancellationToken ct)
         {
             var captions = Enumerable.Range(1, Math.Max(1, count))
-                .Select(i => $"{platform}:{tone}:{description}:{i}")
+                .Select(i => new GeneratedCaption(
+                    $"{platform}:{tone}:{description}:{i}",
+                    new[] { "#test", $"#tag{i}" },
+                    "hook",
+                    "cta",
+                    80 + i))
                 .ToArray();
 
             return Task.FromResult<CaptionGenerationResult>(
