@@ -3,6 +3,7 @@ using System;
 using CaptionGen.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CaptionGen.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323124500_AddUsage")]
+    partial class AddUsage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,10 +124,6 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("captions_used");
 
-                    b.Property<int>("MediaUsed")
-                        .HasColumnType("integer")
-                        .HasColumnName("media_used");
-
                     b.Property<DateTime>("PeriodStartUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("period_start_utc");
@@ -136,6 +135,10 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
+
+                    b.Property<int>("MediaUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("media_used");
 
                     b.HasKey("Id");
 
@@ -152,14 +155,18 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("post_id");
 
                     b.Property<string>("Cta")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("cta");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
 
                     b.Property<string>("HashtagsText")
                         .HasMaxLength(2000)
@@ -176,10 +183,6 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_selected");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("post_id");
 
                     b.Property<int?>("Score")
                         .HasColumnType("integer")
@@ -376,15 +379,6 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CaptionGen.Domain.Entitlements.UserEntitlement", b =>
-                {
-                    b.HasOne("CaptionGen.Domain.Users.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("CaptionGen.Domain.Posts.Caption", b =>
                 {
                     b.HasOne("CaptionGen.Domain.Posts.Post", "Post")
@@ -448,3 +442,4 @@ namespace CaptionGen.Infrastructure.Persistence.Migrations
         }
     }
 }
+

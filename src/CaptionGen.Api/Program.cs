@@ -47,6 +47,7 @@ builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
 builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
 builder.Services.AddHostedService<ScheduledPostWorker>();
 builder.Services.AddScoped<IEntitlementService, EntitlementService>();
+builder.Services.AddScoped<IUsageService, UsageService>();
 
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));

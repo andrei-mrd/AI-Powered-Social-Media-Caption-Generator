@@ -1,4 +1,5 @@
 using CaptionGen.Application.Captions;
+using CaptionGen.Application.Entitlements;
 using CaptionGen.Domain.Posts;
 using MediatR;
 
@@ -9,6 +10,7 @@ public sealed class CreatePostHandler
 {
     private readonly IPostRepository _posts;
     private readonly IAiCaptionService _ai;
+    private readonly IUsageService _usage;
 
     private static readonly HashSet<string> AllowedPlatforms =
         new(StringComparer.OrdinalIgnoreCase) { "instagram", "tiktok", "linkedin" };
@@ -16,10 +18,11 @@ public sealed class CreatePostHandler
     private static readonly HashSet<string> AllowedTones =
         new(StringComparer.OrdinalIgnoreCase) { "funny", "professional", "inspirational" };
 
-    public CreatePostHandler(IPostRepository posts, IAiCaptionService ai)
+    public CreatePostHandler(IPostRepository posts, IAiCaptionService ai, IUsageService usage)
     {
         _posts = posts;
         _ai = ai;
+        _usage = usage;
     }
 
     public async Task<CreatePostResponse> Handle(
@@ -120,6 +123,7 @@ public sealed class CreatePostHandler
         post.Captions = captions;
 
         await _posts.AddAsync(post, cancellationToken);
+        await _usage.IncrementCaptionsAsync(request.UserId, count, cancellationToken);
 
         var captionDtos = captions
             .OrderBy(c => c.VariantIndex)

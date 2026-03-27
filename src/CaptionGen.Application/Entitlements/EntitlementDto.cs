@@ -8,4 +8,7 @@ public sealed record EntitlementDto(
     int SeatsIncluded,
     bool SchedulingEnabled,
     bool AiImproveEnabled,
+    int CaptionsUsedThisPeriod,
+    int MediaUsedThisPeriod,
+    DateTime PeriodStartUtc,
     DateTime? ActiveUntilUtc);

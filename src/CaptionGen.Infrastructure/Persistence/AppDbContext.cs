@@ -17,6 +17,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<PostMedia> PostMedia => Set<PostMedia>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<UserEntitlement> UserEntitlements => Set<UserEntitlement>();
+    public DbSet<UserUsage> UserUsages => Set<UserUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +167,26 @@ public sealed class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.PlanId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserUsage>(b =>
+        {
+            b.ToTable("user_usage");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.PeriodStartUtc).HasColumnName("period_start_utc").IsRequired();
+            b.Property(x => x.CaptionsUsed).HasColumnName("captions_used").IsRequired();
+            b.Property(x => x.MediaUsed).HasColumnName("media_used").IsRequired();
+            b.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
+
+            b.HasIndex(x => new { x.UserId, x.PeriodStartUtc }).IsUnique();
 
             b.HasOne<User>()
                 .WithMany()

@@ -1,37 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity } from 'lucide-react';
-import { normalizeError } from '../utils/api';
+import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity, RefreshCw } from 'lucide-react';
+import { useEntitlements } from '../hooks/useEntitlements';
 import './Dashboard.css';
 
-interface EntitlementDto {
-  planSlug: string;
-  planName: string;
-  captionGenerationsPerMonth: number;
-  mediaAssetsLimit: number;
-  seatsIncluded: number;
-  schedulingEnabled: boolean;
-  aiImproveEnabled: boolean;
-  activeUntilUtc?: string | null;
-}
-
 export default function Dashboard() {
-  const [entitlement, setEntitlement] = useState<EntitlementDto | null>(null);
-  const [entitlementError, setEntitlementError] = useState('');
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch('/api/entitlements', { credentials: 'include' });
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        setEntitlement(data);
-      } catch (err) {
-        setEntitlementError(normalizeError(err, 'Unable to load plan'));
-      }
-    };
-    load();
-  }, []);
+  const { data: entitlement, error: entitlementError, loading, refresh } = useEntitlements(20000);
 
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
@@ -100,13 +73,16 @@ export default function Dashboard() {
               <h3>{entitlement?.planName ?? 'Loading…'}</h3>
               <p className="plan-subtitle">{entitlement?.planSlug ? entitlement.planSlug : ''}</p>
             </div>
+            <button className="plan-refresh" type="button" onClick={refresh} disabled={loading}>
+              <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh
+            </button>
           </div>
           {entitlementError ? (
             <p className="plan-error">{entitlementError}</p>
           ) : entitlement ? (
             <ul className="plan-list">
-              <li><Activity size={14} /> Captions/month: {entitlement.captionGenerationsPerMonth}</li>
-              <li><Activity size={14} /> Media limit: {entitlement.mediaAssetsLimit}</li>
+              <li><Activity size={14} /> Captions/month: {entitlement.captionGenerationsPerMonth} • used {entitlement.captionsUsedThisPeriod}</li>
+              <li><Activity size={14} /> Media limit: {entitlement.mediaAssetsLimit} • used {entitlement.mediaUsedThisPeriod}</li>
               <li><Activity size={14} /> Seats: {entitlement.seatsIncluded}</li>
               <li><Activity size={14} /> Scheduling: {entitlement.schedulingEnabled ? 'On' : 'Off'}</li>
               <li><Activity size={14} /> Improve captions: {entitlement.aiImproveEnabled ? 'On' : 'Off'}</li>

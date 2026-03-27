@@ -3,6 +3,7 @@ using CaptionGen.Application.Posts;
 using CaptionGen.Domain.Posts;
 using FluentAssertions;
 using Moq;
+using CaptionGen.Application.Entitlements;
 
 namespace CaptionGen.Tests.Unit.Posts;
 
@@ -13,6 +14,7 @@ public sealed class CreatePostHandlerTests
     {
         var posts = new Mock<IPostRepository>(MockBehavior.Strict);
         var ai = new Mock<IAiCaptionService>(MockBehavior.Strict);
+        var usage = new Mock<IUsageService>(MockBehavior.Strict);
 
         var userId = Guid.NewGuid();
 
@@ -43,7 +45,10 @@ public sealed class CreatePostHandlerTests
             It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new CreatePostHandler(posts.Object, ai.Object);
+        usage.Setup(x => x.IncrementCaptionsAsync(userId, 2, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = new CreatePostHandler(posts.Object, ai.Object, usage.Object);
 
         var response = await sut.Handle(
             new CreatePostCommand(userId, "  hello  ", " Instagram ", " FUNNY ", "en", "reach", "medium", true, true, 8, null, null, Array.Empty<string>(), Array.Empty<string>(), 2),
@@ -57,6 +62,7 @@ public sealed class CreatePostHandlerTests
 
         ai.VerifyAll();
         posts.VerifyAll();
+        usage.VerifyAll();
     }
 
     [Theory]
@@ -69,8 +75,9 @@ public sealed class CreatePostHandlerTests
     {
         var posts = new Mock<IPostRepository>(MockBehavior.Strict);
         var ai = new Mock<IAiCaptionService>(MockBehavior.Strict);
+        var usage = new Mock<IUsageService>(MockBehavior.Loose);
 
-        var sut = new CreatePostHandler(posts.Object, ai.Object);
+        var sut = new CreatePostHandler(posts.Object, ai.Object, usage.Object);
 
         var act = () => sut.Handle(
             new CreatePostCommand(Guid.NewGuid(), desc, platform, tone, "en", "goal", "medium", true, true, 8, null, null, Array.Empty<string>(), Array.Empty<string>(), count),

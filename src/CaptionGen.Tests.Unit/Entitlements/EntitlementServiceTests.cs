@@ -3,6 +3,7 @@ using CaptionGen.Domain.Entitlements;
 using CaptionGen.Infrastructure.Entitlements;
 using CaptionGen.Infrastructure.Persistence;
 using FluentAssertions;
+using Moq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -32,7 +33,11 @@ public sealed class EntitlementServiceTests
         });
         await db.SaveChangesAsync();
 
-        var sut = new EntitlementService(db, NullLogger<EntitlementService>.Instance);
+        var usage = new Mock<IUsageService>(MockBehavior.Loose);
+        usage.Setup(x => x.GetUsageAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UsageSnapshot(DateTime.UtcNow, 0, 0));
+
+        var sut = new EntitlementService(db, usage.Object, NullLogger<EntitlementService>.Instance);
         var ent = await sut.GetForUserAsync(Guid.NewGuid(), CancellationToken.None);
 
         ent.PlanSlug.Should().Be("free");
@@ -74,7 +79,11 @@ public sealed class EntitlementServiceTests
         });
         await db.SaveChangesAsync();
 
-        var sut = new EntitlementService(db, NullLogger<EntitlementService>.Instance);
+        var usage = new Mock<IUsageService>(MockBehavior.Loose);
+        usage.Setup(x => x.GetUsageAsync(userId, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UsageSnapshot(DateTime.UtcNow, 0, 0));
+
+        var sut = new EntitlementService(db, usage.Object, NullLogger<EntitlementService>.Instance);
         var ent = await sut.GetForUserAsync(userId, CancellationToken.None);
 
         ent.PlanSlug.Should().Be("agency");
