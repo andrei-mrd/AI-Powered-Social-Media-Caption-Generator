@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using CaptionGen.Api.Contracts.Posts;
 using CaptionGen.Application.Captions;
 using CaptionGen.Application.Posts;
 using MediatR;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,6 +54,10 @@ public sealed class PostsController : ControllerBase
 
             return NoContent();
         }
+        catch (ValidationException ex)
+        {
+            return BuildValidationProblem(ex);
+        }
         catch (InvalidOperationException ex)
         {
             const int status = StatusCodes.Status400BadRequest;
@@ -72,6 +78,10 @@ public sealed class PostsController : ControllerBase
         {
             await _mediator.Send(new SelectCaptionCommand(userId, id, variantIndex), ct);
             return NoContent();
+        }
+        catch (ValidationException ex)
+        {
+            return BuildValidationProblem(ex);
         }
         catch (InvalidOperationException ex)
         {
@@ -118,6 +128,10 @@ public sealed class PostsController : ControllerBase
             const int status = StatusCodes.Status400BadRequest;
             return StatusCode(status, BuildProblem(status, "Invalid request", ex.Message));
         }
+        catch (ValidationException ex)
+        {
+            return BuildValidationProblem(ex);
+        }
         catch (AiServiceException ex)
         {
             var status = ex.IsClientError
@@ -140,29 +154,21 @@ public sealed class PostsController : ControllerBase
             Title = title,
             Detail = detail
         };
-}
 
-public sealed class CreatePostRequest
-{
-    public string Description { get; init; } = "";
-    public string Platform { get; init; } = "";
-    public string Tone { get; init; } = "funny";
-    public string Language { get; init; } = "en";
-    public string Goal { get; init; } = "awareness";
-    public string CaptionLength { get; init; } = "medium";
-    public bool IncludeEmojis { get; init; } = true;
-    public bool IncludeCta { get; init; } = true;
-    public int HashtagCount { get; init; } = 12;
-    public string? Audience { get; init; }
-    public string? BrandVoice { get; init; }
-    public IReadOnlyList<string>? ForbiddenWords { get; init; }
-    public IReadOnlyList<string>? KeywordsToInclude { get; init; }
-    public int Count { get; init; } = 3;
-}
+    private IActionResult BuildValidationProblem(ValidationException ex)
+    {
+        var errors = ex.Errors
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray());
 
-public sealed class SchedulePostRequest
-{
-    public DateTime ScheduledAtUtc { get; init; }
-    public int? SelectedCaptionIndex { get; init; }
-    public IReadOnlyList<Guid>? MediaIds { get; init; }
+        var problem = new ValidationProblemDetails(errors)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Validation failed"
+        };
+
+        return ValidationProblem(problem);
+    }
 }

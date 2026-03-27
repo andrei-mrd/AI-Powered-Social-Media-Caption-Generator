@@ -1,5 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+using CaptionGen.Api.Contracts.Captions;
 using CaptionGen.Application.Captions;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,10 @@ public sealed class CaptionsController : ControllerBase
             const int status = StatusCodes.Status400BadRequest;
             return StatusCode(status, BuildProblem(status, "Invalid request", ex.Message));
         }
+        catch (ValidationException ex)
+        {
+            return BuildValidationProblem(ex);
+        }
         catch (AiServiceException ex)
         {
             var status = ex.IsClientError
@@ -58,16 +63,21 @@ public sealed class CaptionsController : ControllerBase
             Title = title,
             Detail = detail
         };
-}
 
-public sealed class ImproveCaptionRequestDto
-{
-    [Required]
-    public string Caption { get; init; } = "";
-    [Required]
-    public string Platform { get; init; } = "";
-    [Required]
-    public string Tone { get; init; } = "";
-    public string Language { get; init; } = "en";
-    public string Goal { get; init; } = "engagement";
+    private IActionResult BuildValidationProblem(ValidationException ex)
+    {
+        var errors = ex.Errors
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray());
+
+        var problem = new ValidationProblemDetails(errors)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Validation failed"
+        };
+
+        return ValidationProblem(problem);
+    }
 }

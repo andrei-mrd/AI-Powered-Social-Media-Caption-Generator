@@ -10,6 +10,8 @@ using CaptionGen.Infrastructure.Media;
 using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
 using CaptionGen.Infrastructure.Users;
+using CaptionGen.Application.Common.Validation;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
@@ -74,6 +76,8 @@ builder.Services.AddHttpClient<IAiCaptionService, AiCaptionClient>((sp, client) 
 
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly));
+builder.Services.AddValidatorsFromAssemblyContaining<CreatePostCommandValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("database")

@@ -1,3 +1,4 @@
+using CaptionGen.Application.Media;
 using CaptionGen.Application.Posts;
 using CaptionGen.Domain.Posts;
 using FluentAssertions;
@@ -11,6 +12,9 @@ public sealed class GetPostsHandlerTests
     public async Task Handle_ShouldOrderCaptionsByVariantIndex()
     {
         var posts = new Mock<IPostRepository>(MockBehavior.Strict);
+        var storage = new Mock<IMediaStorageService>(MockBehavior.Strict);
+        storage.Setup(x => x.BuildPublicUrl(It.IsAny<string>()))
+            .Returns<string>(p => $"url/{p}");
 
         var userId = Guid.NewGuid();
         var post = new Post
@@ -31,7 +35,7 @@ public sealed class GetPostsHandlerTests
         posts.Setup(x => x.GetByUserWithCaptionsAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { post });
 
-        var sut = new GetPostsHandler(posts.Object);
+        var sut = new GetPostsHandler(posts.Object, storage.Object);
 
         var result = await sut.Handle(new GetPostsQuery(userId), CancellationToken.None);
 
@@ -41,4 +45,3 @@ public sealed class GetPostsHandlerTests
         posts.VerifyAll();
     }
 }
-

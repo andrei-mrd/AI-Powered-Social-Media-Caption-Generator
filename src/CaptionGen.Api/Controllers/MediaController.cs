@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CaptionGen.Application.Media;
 using MediatR;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -54,6 +55,10 @@ public sealed class MediaController : ControllerBase
             const int status = StatusCodes.Status400BadRequest;
             return StatusCode(status, BuildProblem(status, "Upload failed", ex.Message));
         }
+        catch (ValidationException ex)
+        {
+            return BuildValidationProblem(ex);
+        }
     }
 
     [HttpDelete("{id:guid}")]
@@ -103,4 +108,21 @@ public sealed class MediaController : ControllerBase
             Title = title,
             Detail = detail
         };
+
+    private IActionResult BuildValidationProblem(ValidationException ex)
+    {
+        var errors = ex.Errors
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray());
+
+        var problem = new ValidationProblemDetails(errors)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Validation failed"
+        };
+
+        return ValidationProblem(problem);
+    }
 }
