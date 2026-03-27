@@ -1,5 +1,6 @@
 using BCryptNet = BCrypt.Net.BCrypt;
 using CaptionGen.Domain.Users;
+using CaptionGen.Domain.Entitlements;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,8 @@ public static class DbInitializer
         {
             await db.Database.MigrateAsync(ct);
         }
+
+        await SeedPlansAsync(db, logger, ct);
 
         var seedEnabled = config.GetValue("Seed:Enabled", false);
         if (!seedEnabled)
@@ -55,5 +58,70 @@ public static class DbInitializer
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Seeded demo user {Email}.", demoEmail);
+    }
+
+    private static async Task SeedPlansAsync(AppDbContext db, ILogger logger, CancellationToken ct)
+    {
+        var existingSlugs = await db.Plans.Select(p => p.Slug).ToListAsync(ct);
+
+        var plans = new[]
+        {
+            new Plan
+            {
+                Id = Guid.NewGuid(),
+                Slug = "free",
+                Name = "Free",
+                CaptionGenerationsPerMonth = 30,
+                MediaAssetsLimit = 20,
+                SeatsIncluded = 1,
+                SchedulingEnabled = true,
+                AiImproveEnabled = true,
+                CreatedAtUtc = DateTime.UtcNow
+            },
+            new Plan
+            {
+                Id = Guid.NewGuid(),
+                Slug = "influencer",
+                Name = "Influencer",
+                CaptionGenerationsPerMonth = 200,
+                MediaAssetsLimit = 200,
+                SeatsIncluded = 1,
+                SchedulingEnabled = true,
+                AiImproveEnabled = true,
+                CreatedAtUtc = DateTime.UtcNow
+            },
+            new Plan
+            {
+                Id = Guid.NewGuid(),
+                Slug = "agency",
+                Name = "Agency",
+                CaptionGenerationsPerMonth = 1000,
+                MediaAssetsLimit = 1000,
+                SeatsIncluded = 5,
+                SchedulingEnabled = true,
+                AiImproveEnabled = true,
+                CreatedAtUtc = DateTime.UtcNow
+            },
+            new Plan
+            {
+                Id = Guid.NewGuid(),
+                Slug = "freelancer",
+                Name = "Freelancer",
+                CaptionGenerationsPerMonth = 150,
+                MediaAssetsLimit = 150,
+                SeatsIncluded = 1,
+                SchedulingEnabled = true,
+                AiImproveEnabled = true,
+                CreatedAtUtc = DateTime.UtcNow
+            }
+        };
+
+        var toInsert = plans.Where(p => !existingSlugs.Contains(p.Slug)).ToList();
+        if (toInsert.Count > 0)
+        {
+            db.Plans.AddRange(toInsert);
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Seeded plans: {Slugs}", string.Join(", ", toInsert.Select(p => p.Slug)));
+        }
     }
 }

@@ -4,8 +4,10 @@ using CaptionGen.Application.Captions;
 using CaptionGen.Application.Posts;
 using CaptionGen.Application.Media;
 using CaptionGen.Application.Users;
+using CaptionGen.Application.Entitlements;
 using CaptionGen.Infrastructure.Auth;
 using CaptionGen.Infrastructure.Captions;
+using CaptionGen.Infrastructure.Entitlements;
 using CaptionGen.Infrastructure.Media;
 using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
@@ -44,6 +46,7 @@ builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
 builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
 builder.Services.AddHostedService<ScheduledPostWorker>();
+builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));

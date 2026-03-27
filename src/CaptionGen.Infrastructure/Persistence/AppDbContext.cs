@@ -1,5 +1,6 @@
 using CaptionGen.Domain.Users;
 using CaptionGen.Domain.Posts;
+using CaptionGen.Domain.Entitlements;
 using Microsoft.EntityFrameworkCore;
 
 namespace CaptionGen.Infrastructure.Persistence;
@@ -14,6 +15,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<Caption> Captions => Set<Caption>();
     public DbSet<PostMedia> PostMedia => Set<PostMedia>();
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<UserEntitlement> UserEntitlements => Set<UserEntitlement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -123,6 +126,50 @@ public sealed class AppDbContext : DbContext
             b.HasOne(x => x.MediaAsset)
                 .WithMany(x => x.PostMedia)
                 .HasForeignKey(x => x.MediaAssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Plan>(b =>
+        {
+            b.ToTable("plans");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.Slug).HasColumnName("slug").HasMaxLength(64).IsRequired();
+            b.Property(x => x.Name).HasColumnName("name").HasMaxLength(128).IsRequired();
+            b.Property(x => x.CaptionGenerationsPerMonth).HasColumnName("caption_generations_per_month").IsRequired();
+            b.Property(x => x.MediaAssetsLimit).HasColumnName("media_assets_limit").IsRequired();
+            b.Property(x => x.SeatsIncluded).HasColumnName("seats_included").IsRequired();
+            b.Property(x => x.SchedulingEnabled).HasColumnName("scheduling_enabled").IsRequired();
+            b.Property(x => x.AiImproveEnabled).HasColumnName("ai_improve_enabled").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+
+            b.HasIndex(x => x.Slug).IsUnique();
+        });
+
+        modelBuilder.Entity<UserEntitlement>(b =>
+        {
+            b.ToTable("user_entitlements");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.PlanId).HasColumnName("plan_id").IsRequired();
+            b.Property(x => x.ActiveUntilUtc).HasColumnName("active_until_utc");
+            b.Property(x => x.SeatsInUse).HasColumnName("seats_in_use").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+
+            b.HasIndex(x => x.UserId).IsUnique();
+            b.HasIndex(x => x.PlanId);
+
+            b.HasOne(x => x.Plan)
+                .WithMany()
+                .HasForeignKey(x => x.PlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

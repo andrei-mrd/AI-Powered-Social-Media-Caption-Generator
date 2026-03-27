@@ -160,6 +160,58 @@
   padding: 2rem;
 }
 
+.plan-box {
+  grid-column: span 1;
+  gap: 1rem;
+}
+
+.plan-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.plan-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #0ea5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plan-subtitle {
+  color: var(--text-secondary);
+  margin: 0.15rem 0 0;
+}
+
+.plan-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-primary);
+}
+
+.plan-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.plan-error {
+  color: var(--accent-red);
+  margin: 0.5rem 0 0;
+}
+
+.plan-loading {
+  color: var(--text-secondary);
+}
+
 .info-box h4, .highlight-box h4 {
   font-size: 1.15rem;
   margin-bottom: 0.75rem;

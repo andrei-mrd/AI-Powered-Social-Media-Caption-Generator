@@ -1,8 +1,44 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PenTool, Target, Hash, Zap, Sparkles } from 'lucide-react';
+import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity } from 'lucide-react';
+import { normalizeError } from '../utils/api';
 import './Dashboard.css';
 
+interface EntitlementDto {
+  planSlug: string;
+  planName: string;
+  captionGenerationsPerMonth: number;
+  mediaAssetsLimit: number;
+  seatsIncluded: number;
+  schedulingEnabled: boolean;
+  aiImproveEnabled: boolean;
+  activeUntilUtc?: string | null;
+}
+
 export default function Dashboard() {
+  const [entitlement, setEntitlement] = useState<EntitlementDto | null>(null);
+  const [entitlementError, setEntitlementError] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/entitlements', { credentials: 'include' });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        setEntitlement(data);
+      } catch (err) {
+        setEntitlementError(normalizeError(err, 'Unable to load plan'));
+      }
+    };
+    load();
+  }, []);
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return '—';
+    const dt = new Date(value);
+    return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString();
+  };
+
   return (
     <div className="dashboard-container animate-fade-in">
       <header className="page-header">
@@ -55,7 +91,32 @@ export default function Dashboard() {
           <h4>Need inspiration?</h4>
           <p>Try giving us a rough idea, product name, or vibe—we will return 3 distinct angles with hashtags instantly.</p>
         </div>
-        
+
+        <div className="bento-item plan-box animate-slide-up animate-delay-150">
+          <div className="plan-header">
+            <div className="plan-icon"><ShieldCheck size={18} /></div>
+            <div>
+              <span className="eyebrow">Your plan</span>
+              <h3>{entitlement?.planName ?? 'Loading…'}</h3>
+              <p className="plan-subtitle">{entitlement?.planSlug ? entitlement.planSlug : ''}</p>
+            </div>
+          </div>
+          {entitlementError ? (
+            <p className="plan-error">{entitlementError}</p>
+          ) : entitlement ? (
+            <ul className="plan-list">
+              <li><Activity size={14} /> Captions/month: {entitlement.captionGenerationsPerMonth}</li>
+              <li><Activity size={14} /> Media limit: {entitlement.mediaAssetsLimit}</li>
+              <li><Activity size={14} /> Seats: {entitlement.seatsIncluded}</li>
+              <li><Activity size={14} /> Scheduling: {entitlement.schedulingEnabled ? 'On' : 'Off'}</li>
+              <li><Activity size={14} /> Improve captions: {entitlement.aiImproveEnabled ? 'On' : 'Off'}</li>
+              <li><Activity size={14} /> Active until: {formatDate(entitlement.activeUntilUtc)}</li>
+            </ul>
+          ) : (
+            <p className="plan-loading">Fetching plan…</p>
+          )}
+        </div>
+
         <div className="bento-item highlight-box animate-slide-up animate-delay-300">
           <h4>Plan a series</h4>
           <p>Save prompt snippets for campaigns so every post stays aligned across platforms.</p>
