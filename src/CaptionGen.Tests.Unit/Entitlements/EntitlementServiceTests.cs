@@ -12,7 +12,7 @@ namespace CaptionGen.Tests.Unit.Entitlements;
 public sealed class EntitlementServiceTests
 {
     [Fact]
-    public async Task GetForUserAsync_ShouldFallbackToFreePlan()
+    public async Task GetForUserAsync_ShouldFallbackToBasicPlan()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -22,8 +22,8 @@ public sealed class EntitlementServiceTests
         db.Plans.Add(new Plan
         {
             Id = Guid.NewGuid(),
-            Slug = "free",
-            Name = "Free",
+            Slug = "basic",
+            Name = "Basic",
             CaptionGenerationsPerMonth = 30,
             MediaAssetsLimit = 20,
             SeatsIncluded = 1,
@@ -40,7 +40,7 @@ public sealed class EntitlementServiceTests
         var sut = new EntitlementService(db, usage.Object, NullLogger<EntitlementService>.Instance);
         var ent = await sut.GetForUserAsync(Guid.NewGuid(), CancellationToken.None);
 
-        ent.PlanSlug.Should().Be("free");
+        ent.PlanSlug.Should().Be("basic");
         ent.CaptionGenerationsPerMonth.Should().Be(30);
     }
 

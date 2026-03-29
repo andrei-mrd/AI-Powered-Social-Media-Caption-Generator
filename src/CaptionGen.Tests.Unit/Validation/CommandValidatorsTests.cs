@@ -1,6 +1,7 @@
 using CaptionGen.Application.Captions;
 using CaptionGen.Application.Media;
 using CaptionGen.Application.Posts;
+using CaptionGen.Application.Payments;
 using FluentAssertions;
 
 namespace CaptionGen.Tests.Unit.Validation;
@@ -109,6 +110,26 @@ public sealed class CommandValidatorsTests
             "funny",
             "en",
             "conversion"));
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void CreateCheckoutSessionCommandValidator_ShouldAcceptSlug()
+    {
+        var validator = new CreateCheckoutSessionCommandValidator();
+
+        var result = validator.Validate(new CreateCheckoutSessionCommand(Guid.NewGuid(), "agency"));
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void CreateCheckoutSessionCommandValidator_ShouldRejectBadSlug()
+    {
+        var validator = new CreateCheckoutSessionCommandValidator();
+
+        var result = validator.Validate(new CreateCheckoutSessionCommand(Guid.NewGuid(), "bad slug!"));
 
         result.IsValid.Should().BeFalse();
     }

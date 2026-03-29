@@ -1,4 +1,5 @@
 using CaptionGen.Application.Auth;
+using CaptionGen.Application.Entitlements;
 using CaptionGen.Application.Users;
 using CaptionGen.Domain.Users;
 using FluentAssertions;
@@ -21,12 +22,17 @@ public sealed class RegisterHandlerTests
             It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new RegisterHandler(users.Object);
+        var entitlements = new Mock<IEntitlementService>(MockBehavior.Strict);
+        entitlements.Setup(x => x.AssignPlanAsync(It.IsAny<Guid>(), "basic", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = new RegisterHandler(users.Object, entitlements.Object);
 
         var id = await sut.Handle(new RegisterCommand("  TEST@Example.com  ", "P@ssw0rd!"), CancellationToken.None);
 
         id.Should().NotBeEmpty();
         users.VerifyAll();
+        entitlements.VerifyAll();
     }
 
     [Fact]
@@ -36,7 +42,9 @@ public sealed class RegisterHandlerTests
         users.Setup(x => x.GetByEmailAsync("test@example.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = Guid.NewGuid(), Email = "test@example.com", PasswordHash = "x", CreatedAtUtc = DateTime.UtcNow });
 
-        var sut = new RegisterHandler(users.Object);
+        var entitlements = new Mock<IEntitlementService>(MockBehavior.Loose);
+
+        var sut = new RegisterHandler(users.Object, entitlements.Object);
 
         var act = () => sut.Handle(new RegisterCommand("test@example.com", "pw"), CancellationToken.None);
 
@@ -45,4 +53,3 @@ public sealed class RegisterHandlerTests
         users.VerifyAll();
     }
 }
-

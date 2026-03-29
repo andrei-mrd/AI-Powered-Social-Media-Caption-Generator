@@ -1,5 +1,6 @@
 using System.Data.Common;
 using CaptionGen.Application.Captions;
+using CaptionGen.Application.Payments;
 using CaptionGen.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -54,7 +55,15 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
                 ["Jwt:CookieName"] = "cg_at",
                 ["Jwt:AccessMinutes"] = "60",
                 ["Jwt:AllowInsecureCookieOnHttp"] = "true",
-                ["Jwt:Key"] = "INTEGRATION_TEST_KEY_32CHARS_MINIMUM_1234"
+                ["Jwt:Key"] = "INTEGRATION_TEST_KEY_32CHARS_MINIMUM_1234",
+                ["Stripe:SecretKey"] = "sk_test_integration_only",
+                ["Stripe:PublishableKey"] = "pk_test_integration_only",
+                ["Stripe:SuccessUrl"] = "http://localhost/success",
+                ["Stripe:CancelUrl"] = "http://localhost/cancel",
+                ["Stripe:PriceIds:basic"] = "price_test_basic",
+                ["Stripe:PriceIds:freelancer"] = "price_test_freelancer",
+                ["Stripe:PriceIds:influencer"] = "price_test_influencer",
+                ["Stripe:PriceIds:agency"] = "price_test_agency"
             };
             cfg.AddInMemoryCollection(overrides);
         });
@@ -77,6 +86,8 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
 
             services.RemoveAll<IAiCaptionService>();
             services.AddSingleton<IAiCaptionService, FakeAiCaptionService>();
+            services.RemoveAll<IPaymentService>();
+            services.AddSingleton<IPaymentService, FakePaymentService>();
 
             using var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
@@ -126,6 +137,16 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
         {
             var improved = $"improved:{caption}";
             return Task.FromResult(new CaptionImprovementResult(improved, improved[..Math.Min(improved.Length, 50)], $"{improved}:cta", Guid.NewGuid().ToString("N")));
+        }
+    }
+
+    private sealed class FakePaymentService : IPaymentService
+    {
+        public Task<CheckoutSessionResult> CreateCheckoutSessionAsync(Guid userId, string planSlug, CancellationToken cancellationToken = default)
+        {
+            var sessionId = $"cs_test_{Guid.NewGuid():N}";
+            var url = $"https://checkout.stripe.com/test/{sessionId}";
+            return Task.FromResult(new CheckoutSessionResult(sessionId, url));
         }
     }
 }

@@ -1,15 +1,33 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity, RefreshCw } from 'lucide-react';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { normalizeError } from '../utils/api';
+import { startStripeCheckout } from '../payments/checkout';
 import './Dashboard.css';
 
 export default function Dashboard() {
   const { data: entitlement, error: entitlementError, loading, refresh } = useEntitlements(20000);
+  const [planSlug, setPlanSlug] = useState('influencer');
+  const [checkoutError, setCheckoutError] = useState('');
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
     const dt = new Date(value);
     return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString();
+  };
+
+  const handleCheckout = async () => {
+    setCheckoutError('');
+    setIsCheckingOut(true);
+    try {
+      await startStripeCheckout(planSlug);
+    } catch (err) {
+      setCheckoutError(normalizeError(err, 'Unable to start checkout'));
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -80,14 +98,41 @@ export default function Dashboard() {
           {entitlementError ? (
             <p className="plan-error">{entitlementError}</p>
           ) : entitlement ? (
-            <ul className="plan-list">
-              <li><Activity size={14} /> Captions/month: {entitlement.captionGenerationsPerMonth} • used {entitlement.captionsUsedThisPeriod}</li>
-              <li><Activity size={14} /> Media limit: {entitlement.mediaAssetsLimit} • used {entitlement.mediaUsedThisPeriod}</li>
-              <li><Activity size={14} /> Seats: {entitlement.seatsIncluded}</li>
-              <li><Activity size={14} /> Scheduling: {entitlement.schedulingEnabled ? 'On' : 'Off'}</li>
-              <li><Activity size={14} /> Improve captions: {entitlement.aiImproveEnabled ? 'On' : 'Off'}</li>
-              <li><Activity size={14} /> Active until: {formatDate(entitlement.activeUntilUtc)}</li>
-            </ul>
+            <>
+              <ul className="plan-list">
+                <li><Activity size={14} /> Captions/month: {entitlement.captionGenerationsPerMonth} • used {entitlement.captionsUsedThisPeriod}</li>
+                <li><Activity size={14} /> Media limit: {entitlement.mediaAssetsLimit} • used {entitlement.mediaUsedThisPeriod}</li>
+                <li><Activity size={14} /> Seats: {entitlement.seatsIncluded}</li>
+                <li><Activity size={14} /> Scheduling: {entitlement.schedulingEnabled ? 'On' : 'Off'}</li>
+                <li><Activity size={14} /> Improve captions: {entitlement.aiImproveEnabled ? 'On' : 'Off'}</li>
+                <li><Activity size={14} /> Active until: {formatDate(entitlement.activeUntilUtc)}</li>
+              </ul>
+              <div className="plan-checkout">
+                <label className="plan-select-label">
+                  Choose plan
+                  <select
+                    value={planSlug}
+                    onChange={e => setPlanSlug(e.target.value)}
+                    className="plan-select"
+                    aria-label="Choose plan to purchase"
+                    disabled={isCheckingOut}
+                  >
+                    <option value="freelancer">Freelancer</option>
+                    <option value="influencer">Influencer</option>
+                    <option value="agency">Agency</option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="btn-primary plan-checkout-btn"
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut}
+                >
+                  {isCheckingOut ? 'Redirecting…' : 'Upgrade via Stripe'}
+                </button>
+              </div>
+              {checkoutError && <p className="plan-error">{checkoutError}</p>}
+            </>
           ) : (
             <p className="plan-loading">Fetching plan…</p>
           )}

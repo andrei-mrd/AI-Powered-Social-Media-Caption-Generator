@@ -25,6 +25,7 @@ public static class DbInitializer
         }
 
         await SeedPlansAsync(db, logger, ct);
+        await EnsureUserEntitlementsAsync(db, logger, ct);
 
         var seedEnabled = config.GetValue("Seed:Enabled", false);
         if (!seedEnabled)
@@ -69,8 +70,8 @@ public static class DbInitializer
             new Plan
             {
                 Id = Guid.NewGuid(),
-                Slug = "free",
-                Name = "Free",
+                Slug = "basic",
+                Name = "Basic",
                 CaptionGenerationsPerMonth = 30,
                 MediaAssetsLimit = 20,
                 SeatsIncluded = 1,
@@ -122,6 +123,56 @@ public static class DbInitializer
             db.Plans.AddRange(toInsert);
             await db.SaveChangesAsync(ct);
             logger.LogInformation("Seeded plans: {Slugs}", string.Join(", ", toInsert.Select(p => p.Slug)));
+        }
+    }
+
+    private static async Task EnsureUserEntitlementsAsync(AppDbContext db, ILogger logger, CancellationToken ct)
+    {
+        var basicPlan = await db.Plans.FirstOrDefaultAsync(p => p.Slug == "basic", ct)
+                        ?? await db.Plans.FirstOrDefaultAsync(p => p.Slug == "free", ct);
+
+        if (basicPlan is null)
+        {
+            logger.LogWarning("No basic/free plan found; skipping entitlement backfill.");
+            return;
+        }
+
+        var freePlan = await db.Plans.FirstOrDefaultAsync(p => p.Slug == "free", ct);
+
+        var usersWithoutEntitlement = await db.Users
+            .Where(u => !db.UserEntitlements.Any(e => e.UserId == u.Id))
+            .ToListAsync(ct);
+
+        if (usersWithoutEntitlement.Count == 0)
+            goto UpdateFreeEntitlements;
+
+        foreach (var user in usersWithoutEntitlement)
+        {
+            db.UserEntitlements.Add(new UserEntitlement
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                PlanId = basicPlan.Id,
+                ActiveUntilUtc = null,
+                SeatsInUse = 1,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Assigned basic plan to {Count} users without entitlements.", usersWithoutEntitlement.Count);
+
+UpdateFreeEntitlements:
+        if (freePlan is not null && basicPlan.Id != freePlan.Id)
+        {
+            var updated = await db.UserEntitlements
+                .Where(e => e.PlanId == freePlan.Id)
+                .ExecuteUpdateAsync(u => u.SetProperty(x => x.PlanId, basicPlan.Id), ct);
+
+            if (updated > 0)
+            {
+                logger.LogInformation("Updated {Count} user entitlements from free to basic.", updated);
+            }
         }
     }
 }

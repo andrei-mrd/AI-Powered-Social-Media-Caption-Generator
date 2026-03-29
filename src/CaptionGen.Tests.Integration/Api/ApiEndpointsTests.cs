@@ -201,4 +201,22 @@ public sealed class ApiEndpointsTests : IClassFixture<CaptionGenApiFactory>
         shorter.GetString().Should().NotBeNullOrWhiteSpace();
         stronger.GetString().Should().NotBeNullOrWhiteSpace();
     }
+
+    [Fact]
+    public async Task Payments_CreateCheckoutSession_ShouldReturnSession()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/payments/checkout-session", new
+        {
+            planSlug = "agency"
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.TryGetProperty("sessionId", out var sessionId).Should().BeTrue();
+        body.TryGetProperty("url", out var url).Should().BeTrue();
+        sessionId.GetString().Should().NotBeNullOrWhiteSpace();
+        url.GetString().Should().StartWith("https://checkout.stripe.com/");
+    }
 }

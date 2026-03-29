@@ -35,7 +35,8 @@ public sealed class EntitlementService : IEntitlementService
 
         if (plan is null)
         {
-            plan = await _db.Plans.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == "free", cancellationToken);
+            plan = await _db.Plans.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == "basic", cancellationToken)
+                   ?? await _db.Plans.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == "free", cancellationToken);
         }
 
         if (plan is null)
@@ -69,5 +70,38 @@ public sealed class EntitlementService : IEntitlementService
             usage.MediaUsed,
             usage.PeriodStartUtc,
             entitlement?.ActiveUntilUtc);
+    }
+
+    public async Task AssignPlanAsync(Guid userId, string planSlug, CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = (planSlug ?? string.Empty).Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedSlug))
+            throw new InvalidOperationException("Plan slug is required.");
+
+        var plan = await _db.Plans.FirstOrDefaultAsync(p => p.Slug.ToLower() == normalizedSlug, cancellationToken);
+        if (plan is null)
+            throw new InvalidOperationException($"Plan '{planSlug}' not found.");
+
+        var entitlement = await _db.UserEntitlements.FirstOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+        if (entitlement is null)
+        {
+            entitlement = new UserEntitlement
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                PlanId = plan.Id,
+                ActiveUntilUtc = null,
+                SeatsInUse = 1,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            _db.UserEntitlements.Add(entitlement);
+        }
+        else
+        {
+            entitlement.PlanId = plan.Id;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 }

@@ -5,10 +5,12 @@ using CaptionGen.Application.Posts;
 using CaptionGen.Application.Media;
 using CaptionGen.Application.Users;
 using CaptionGen.Application.Entitlements;
+using CaptionGen.Application.Payments;
 using CaptionGen.Infrastructure.Auth;
 using CaptionGen.Infrastructure.Captions;
 using CaptionGen.Infrastructure.Entitlements;
 using CaptionGen.Infrastructure.Media;
+using CaptionGen.Infrastructure.Payments;
 using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
 using CaptionGen.Infrastructure.Users;
@@ -23,6 +25,41 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Stripe;
+
+static void LoadEnvFiles()
+{
+    var candidates = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+        Path.Combine(AppContext.BaseDirectory, ".env"),
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env")),
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".env"))
+    };
+
+    foreach (var path in candidates.Distinct())
+    {
+        if (!System.IO.File.Exists(path)) continue;
+
+        foreach (var line in System.IO.File.ReadAllLines(path))
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#")) continue;
+            var separatorIndex = trimmed.IndexOf('=', StringComparison.Ordinal);
+            if (separatorIndex <= 0) continue;
+
+            var key = trimmed[..separatorIndex].Trim();
+            var value = trimmed[(separatorIndex + 1)..].Trim();
+            if (string.IsNullOrWhiteSpace(key)) continue;
+
+            Environment.SetEnvironmentVariable(key, value);
+        }
+
+        break;
+    }
+}
+
+LoadEnvFiles();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,11 +85,15 @@ builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
 builder.Services.AddHostedService<ScheduledPostWorker>();
 builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 builder.Services.AddScoped<IUsageService, UsageService>();
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
+builder.Services.AddScoped<IPaymentWebhookService, StripeWebhookService>();
 
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));
 builder.Services.Configure<MediaStorageOptions>(
     builder.Configuration.GetSection(MediaStorageOptions.SectionName));
+builder.Services.Configure<StripeOptions>(
+    builder.Configuration.GetSection(StripeOptions.SectionName));
 
 builder.Services.AddHttpClient("AiService.Health", (sp, client) =>
 {
@@ -76,6 +117,17 @@ builder.Services.AddHttpClient<IAiCaptionService, AiCaptionClient>((sp, client) 
 
     client.BaseAddress = uri;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.TimeoutSeconds, 5, 120));
+});
+
+builder.Services.AddSingleton<IStripeClient>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<StripeOptions>>().Value;
+    if (string.IsNullOrWhiteSpace(options.SecretKey))
+    {
+        throw new InvalidOperationException("Stripe:SecretKey is not configured.");
+    }
+
+    return new StripeClient(options.SecretKey);
 });
 
 builder.Services.AddMediatR(cfg =>

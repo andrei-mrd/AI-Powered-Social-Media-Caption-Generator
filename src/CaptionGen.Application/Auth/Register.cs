@@ -1,4 +1,5 @@
 using CaptionGen.Application.Users;
+using CaptionGen.Application.Entitlements;
 using CaptionGen.Domain.Users;
 using MediatR;
 using BCryptNet = BCrypt.Net.BCrypt;
@@ -10,10 +11,12 @@ public sealed record RegisterCommand(string Email, string Password) : IRequest<G
 public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
 {
     private readonly IUserRepository _users;
+    private readonly IEntitlementService _entitlements;
 
-    public RegisterHandler(IUserRepository users)
+    public RegisterHandler(IUserRepository users, IEntitlementService entitlements)
     {
         _users = users;
+        _entitlements = entitlements;
     }
 
     public async Task<Guid> Handle(RegisterCommand request, CancellationToken ct)
@@ -35,6 +38,7 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
         };
 
         await _users.AddAsync(user, ct);
+        await _entitlements.AssignPlanAsync(user.Id, "basic", ct);
         return user.Id;
     }
 }

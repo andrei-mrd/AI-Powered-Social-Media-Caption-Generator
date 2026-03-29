@@ -9,6 +9,7 @@ import MyPosts from './pages/MyPosts'
 import CreatePostFlow from './pages/CreatePostFlow'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import CheckoutResult from './pages/CheckoutResult'
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/checkout/success" element={<CheckoutResult />} />
+        <Route path="/checkout/cancel" element={<CheckoutResult />} />
 
         {/* Protected app pages (with sidebar) */}
         <Route element={<AppLayout />}>
