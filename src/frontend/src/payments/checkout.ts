@@ -26,6 +26,7 @@ export async function startStripeCheckout(planSlug: string): Promise<void> {
   const data: { sessionId: string; url?: string } = await res.json();
 
   if (data.url) {
+    sessionStorage.setItem('pendingPlanSlug', planSlug);
     window.location.assign(data.url);
     return;
   }
@@ -39,6 +40,7 @@ export async function startStripeCheckout(planSlug: string): Promise<void> {
     throw new Error('Stripe checkout URL missing and redirect API unavailable.');
   }
 
+  sessionStorage.setItem('pendingPlanSlug', planSlug);
   const { error } = await redirect({ sessionId: data.sessionId });
   if (error?.message) throw new Error(error.message);
 }

@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using CaptionGen.Application.Auth;
+using CaptionGen.Infrastructure.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CaptionGen.Api.Controllers;
 
@@ -12,13 +14,13 @@ namespace CaptionGen.Api.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IConfiguration _cfg;
+    private readonly JwtOptions _jwtOptions;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IMediator mediator, IConfiguration cfg, ILogger<AuthController> logger)
+    public AuthController(IMediator mediator, IOptions<JwtOptions> jwtOptions, ILogger<AuthController> logger)
     {
         _mediator = mediator;
-        _cfg = cfg;
+        _jwtOptions = jwtOptions.Value;
         _logger = logger;
     }
 
@@ -48,8 +50,7 @@ public sealed class AuthController : ControllerBase
         {
             var token = await _mediator.Send(new LoginCommand(req.Email, req.Password), ct);
 
-            var cookieName = _cfg["Jwt:CookieName"]!;
-            Response.Cookies.Append(cookieName, token, BuildCookieOptions(addExpiry: true));
+            Response.Cookies.Append(_jwtOptions.CookieName, token, BuildCookieOptions(addExpiry: true));
 
             return Ok(new { token });
         }
@@ -71,9 +72,7 @@ public sealed class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        var cookieName = _cfg["Jwt:CookieName"]!;
-        Response.Cookies.Delete(cookieName, BuildCookieOptions());
-
+        Response.Cookies.Delete(_jwtOptions.CookieName, BuildCookieOptions());
         return Ok(new { ok = true });
     }
 
@@ -97,7 +96,7 @@ public sealed class AuthController : ControllerBase
 
     private CookieOptions BuildCookieOptions(bool addExpiry = false)
     {
-        var allowInsecure = _cfg.GetValue<bool>("Jwt:AllowInsecureCookieOnHttp");
+        var allowInsecure = _jwtOptions.AllowInsecureCookieOnHttp;
         var options = new CookieOptions
         {
             HttpOnly = true,
@@ -108,7 +107,7 @@ public sealed class AuthController : ControllerBase
 
         if (addExpiry)
         {
-            options.Expires = DateTimeOffset.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:AccessMinutes"]!));
+            options.Expires = DateTimeOffset.UtcNow.AddMinutes(_jwtOptions.AccessMinutes);
         }
 
         return options;

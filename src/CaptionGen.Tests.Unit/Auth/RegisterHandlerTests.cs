@@ -26,13 +26,17 @@ public sealed class RegisterHandlerTests
         entitlements.Setup(x => x.AssignPlanAsync(It.IsAny<Guid>(), "basic", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new RegisterHandler(users.Object, entitlements.Object);
+        var passwordHasher = new Mock<IPasswordHasher>(MockBehavior.Strict);
+        passwordHasher.Setup(x => x.Hash("P@ssw0rd!")).Returns("hashed-password");
+
+        var sut = new RegisterHandler(users.Object, entitlements.Object, passwordHasher.Object);
 
         var id = await sut.Handle(new RegisterCommand("  TEST@Example.com  ", "P@ssw0rd!"), CancellationToken.None);
 
         id.Should().NotBeEmpty();
         users.VerifyAll();
         entitlements.VerifyAll();
+        passwordHasher.VerifyAll();
     }
 
     [Fact]
@@ -43,8 +47,9 @@ public sealed class RegisterHandlerTests
             .ReturnsAsync(new User { Id = Guid.NewGuid(), Email = "test@example.com", PasswordHash = "x", CreatedAtUtc = DateTime.UtcNow });
 
         var entitlements = new Mock<IEntitlementService>(MockBehavior.Loose);
+        var passwordHasher = new Mock<IPasswordHasher>(MockBehavior.Loose);
 
-        var sut = new RegisterHandler(users.Object, entitlements.Object);
+        var sut = new RegisterHandler(users.Object, entitlements.Object, passwordHasher.Object);
 
         var act = () => sut.Handle(new RegisterCommand("test@example.com", "pw"), CancellationToken.None);
 

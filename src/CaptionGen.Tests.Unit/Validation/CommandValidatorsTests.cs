@@ -1,17 +1,41 @@
 using CaptionGen.Application.Captions;
+using CaptionGen.Application.Common.Policies;
 using CaptionGen.Application.Media;
 using CaptionGen.Application.Posts;
 using CaptionGen.Application.Payments;
 using FluentAssertions;
+using Moq;
 
 namespace CaptionGen.Tests.Unit.Validation;
 
 public sealed class CommandValidatorsTests
 {
+    private static IContentPolicy BuildPolicy()
+    {
+        var policy = new Mock<IContentPolicy>(MockBehavior.Strict);
+        policy.Setup(p => p.AllowedPlatforms).Returns(new[] { "instagram", "tiktok", "linkedin" });
+        policy.Setup(p => p.AllowedTones).Returns(new[] { "funny", "professional", "casual" });
+        policy.Setup(p => p.AllowedGoals).Returns(new[] { "reach", "engagement", "sales" });
+        policy.Setup(p => p.AllowedCaptionLengths).Returns(new[] { "short", "medium", "long" });
+        policy.Setup(p => p.MinCaptionCount).Returns(1);
+        policy.Setup(p => p.MaxCaptionCount).Returns(10);
+        policy.Setup(p => p.MinHashtags).Returns(1);
+        policy.Setup(p => p.MaxHashtags).Returns(30);
+        policy.Setup(p => p.IsSupportedPlatform(It.IsAny<string>()))
+            .Returns<string>(v => new[] { "instagram", "tiktok", "linkedin" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+        policy.Setup(p => p.IsSupportedTone(It.IsAny<string>()))
+            .Returns<string>(v => new[] { "funny", "professional", "casual" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+        policy.Setup(p => p.IsSupportedGoal(It.IsAny<string>()))
+            .Returns<string>(v => new[] { "reach", "engagement", "sales" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+        policy.Setup(p => p.IsSupportedCaptionLength(It.IsAny<string>()))
+            .Returns<string>(v => new[] { "short", "medium", "long" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+        return policy.Object;
+    }
+
     [Fact]
     public void CreatePostCommandValidator_ShouldAcceptValidPayload()
     {
-        var validator = new CreatePostCommandValidator();
+        var validator = new CreatePostCommandValidator(BuildPolicy());
 
         var result = validator.Validate(new CreatePostCommand(
             Guid.NewGuid(),
@@ -36,7 +60,7 @@ public sealed class CommandValidatorsTests
     [Fact]
     public void CreatePostCommandValidator_ShouldRejectBadPlatform()
     {
-        var validator = new CreatePostCommandValidator();
+        var validator = new CreatePostCommandValidator(BuildPolicy());
 
         var result = validator.Validate(new CreatePostCommand(
             Guid.NewGuid(),
@@ -102,7 +126,7 @@ public sealed class CommandValidatorsTests
     [Fact]
     public void ImproveCaptionCommandValidator_ShouldRejectBadGoal()
     {
-        var validator = new ImproveCaptionCommandValidator();
+        var validator = new ImproveCaptionCommandValidator(BuildPolicy());
 
         var result = validator.Validate(new ImproveCaptionCommand(
             "caption",

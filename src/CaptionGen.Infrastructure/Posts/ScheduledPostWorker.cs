@@ -1,7 +1,9 @@
+using CaptionGen.Application.Common.Time;
 using CaptionGen.Application.Posts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CaptionGen.Infrastructure.Posts;
 
@@ -12,13 +14,18 @@ public sealed class ScheduledPostWorker : BackgroundService
 {
     private readonly IServiceProvider _services;
     private readonly ILogger<ScheduledPostWorker> _logger;
-    private readonly TimeSpan _pollInterval = TimeSpan.FromSeconds(30);
-    private const int BatchSize = 10;
+    private readonly TimeSpan _pollInterval;
+    private readonly int _batchSize;
 
-    public ScheduledPostWorker(IServiceProvider services, ILogger<ScheduledPostWorker> logger)
+    public ScheduledPostWorker(
+        IServiceProvider services,
+        IOptions<SchedulingOptions> options,
+        ILogger<ScheduledPostWorker> logger)
     {
         _services = services;
         _logger = logger;
+        _pollInterval = TimeSpan.FromSeconds(options.Value.CheckIntervalSeconds);
+        _batchSize = options.Value.BatchSize;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +50,7 @@ public sealed class ScheduledPostWorker : BackgroundService
         using var scope = _services.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IPostRepository>();
 
-        var due = await repo.AcquireDueScheduledAsync(DateTime.UtcNow, BatchSize, ct);
+        var due = await repo.AcquireDueScheduledAsync(DateTime.UtcNow, _batchSize, ct);
         if (due.Count == 0) return;
 
         foreach (var post in due)

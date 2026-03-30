@@ -65,24 +65,6 @@ public sealed class CreatePostHandlerTests
         usage.VerifyAll();
     }
 
-    [Theory]
-    [InlineData("", "instagram", "funny", 1)]
-    [InlineData("x", "nope", "funny", 1)]
-    [InlineData("x", "instagram", "nope", 1)]
-    [InlineData("x", "instagram", "funny", 0)]
-    [InlineData("x", "instagram", "funny", 11)]
-    public async Task Handle_WithInvalidRequest_ShouldThrow(string desc, string platform, string tone, int count)
-    {
-        var posts = new Mock<IPostRepository>(MockBehavior.Strict);
-        var ai = new Mock<IAiCaptionService>(MockBehavior.Strict);
-        var usage = new Mock<IUsageService>(MockBehavior.Loose);
-
-        var sut = new CreatePostHandler(posts.Object, ai.Object, usage.Object);
-
-        var act = () => sut.Handle(
-            new CreatePostCommand(Guid.NewGuid(), desc, platform, tone, "en", "goal", "medium", true, true, 8, null, null, Array.Empty<string>(), Array.Empty<string>(), count),
-            CancellationToken.None);
-
-        await act.Should().ThrowAsync<InvalidOperationException>();
-    }
+    // Input validation (platform, tone, count, etc.) is enforced by CreatePostCommandValidator
+    // via the MediatR pipeline before the handler runs. Validation is tested in CommandValidatorsTests.
 }

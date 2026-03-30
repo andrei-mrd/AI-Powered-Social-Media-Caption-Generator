@@ -18,13 +18,3 @@ public sealed class SchedulePostCommandValidator : AbstractValidator<SchedulePos
             .NotNull();
     }
 }
-
-public sealed class SelectCaptionCommandValidator : AbstractValidator<SelectCaptionCommand>
-{
-    public SelectCaptionCommandValidator()
-    {
-        RuleFor(x => x.UserId).NotEmpty();
-        RuleFor(x => x.PostId).NotEmpty();
-        RuleFor(x => x.VariantIndex).GreaterThanOrEqualTo(0);
-    }
-}

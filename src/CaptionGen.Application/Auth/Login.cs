@@ -1,6 +1,5 @@
 using CaptionGen.Application.Users;
 using MediatR;
-using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace CaptionGen.Application.Auth;
 
@@ -10,11 +9,13 @@ public sealed class LoginHandler : IRequestHandler<LoginCommand, string>
 {
     private readonly IUserRepository _users;
     private readonly ITokenService _tokens;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public LoginHandler(IUserRepository users, ITokenService tokens)
+    public LoginHandler(IUserRepository users, ITokenService tokens, IPasswordHasher passwordHasher)
     {
         _users = users;
         _tokens = tokens;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<string> Handle(LoginCommand request, CancellationToken ct)
@@ -27,7 +28,7 @@ public sealed class LoginHandler : IRequestHandler<LoginCommand, string>
         if (user is null)
             throw new InvalidOperationException("Invalid credentials");
 
-        if (!BCryptNet.Verify(request.Password, user.PasswordHash))
+        if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             throw new InvalidOperationException("Invalid credentials");
 
         return _tokens.CreateAccessToken(user);

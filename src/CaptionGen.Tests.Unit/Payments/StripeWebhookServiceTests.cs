@@ -65,6 +65,109 @@ public sealed class StripeWebhookServiceTests
         await act.Should().ThrowAsync<PaymentServiceException>();
     }
 
+    [Fact]
+    public async Task HandleAsync_WithSubscriptionUpdated_ShouldAssignPlanFromPriceId()
+    {
+        var secret = "whsec_test";
+        var userId = Guid.NewGuid();
+
+        var payloadObj = new
+        {
+            id = "evt_2",
+            type = "customer.subscription.updated",
+            data = new
+            {
+                @object = new
+                {
+                    id = "sub_test",
+                    @object = "subscription",
+                    metadata = new Dictionary<string, string>
+                    {
+                        { "userId", userId.ToString() }
+                    },
+                    items = new
+                    {
+                        @object = "list",
+                        data = new object[]
+                        {
+                            new
+                            {
+                                id = "si_test",
+                                @object = "subscription_item",
+                                price = new
+                                {
+                                    id = "price_test_agency",
+                                    @object = "price"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var payload = JsonSerializer.Serialize(payloadObj);
+        var sigHeader = BuildSignatureHeader(payload, secret);
+
+        var entitlements = new Mock<IEntitlementService>(MockBehavior.Strict);
+        entitlements.Setup(x => x.AssignPlanAsync(userId, "agency", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var options = Options.Create(new StripeOptions
+        {
+            WebhookSecret = secret,
+            PriceIds = new Dictionary<string, string>
+            {
+                ["agency"] = "price_test_agency"
+            }
+        });
+
+        var sut = new StripeWebhookService(options, entitlements.Object, NullLogger<StripeWebhookService>.Instance);
+
+        await sut.HandleAsync(payload, sigHeader, CancellationToken.None);
+
+        entitlements.VerifyAll();
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithSubscriptionDeleted_ShouldDowngradeToBasic()
+    {
+        var secret = "whsec_test";
+        var userId = Guid.NewGuid();
+
+        var payloadObj = new
+        {
+            id = "evt_3",
+            type = "customer.subscription.deleted",
+            data = new
+            {
+                @object = new
+                {
+                    id = "sub_test",
+                    @object = "subscription",
+                    metadata = new Dictionary<string, string>
+                    {
+                        { "userId", userId.ToString() }
+                    }
+                }
+            }
+        };
+
+        var payload = JsonSerializer.Serialize(payloadObj);
+        var sigHeader = BuildSignatureHeader(payload, secret);
+
+        var entitlements = new Mock<IEntitlementService>(MockBehavior.Strict);
+        entitlements.Setup(x => x.AssignPlanAsync(userId, "basic", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var options = Options.Create(new StripeOptions { WebhookSecret = secret });
+        var sut = new StripeWebhookService(options, entitlements.Object, NullLogger<StripeWebhookService>.Instance);
+
+        await sut.HandleAsync(payload, sigHeader, CancellationToken.None);
+
+        entitlements.VerifyAll();
+    }
+
     private static string BuildSignatureHeader(string payload, string secret)
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

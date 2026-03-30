@@ -1,6 +1,8 @@
 using System.Text;
 using CaptionGen.Application.Auth;
 using CaptionGen.Application.Captions;
+using CaptionGen.Application.Common.Policies;
+using CaptionGen.Application.Common.Time;
 using CaptionGen.Application.Posts;
 using CaptionGen.Application.Media;
 using CaptionGen.Application.Users;
@@ -14,6 +16,8 @@ using CaptionGen.Infrastructure.Payments;
 using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
 using CaptionGen.Infrastructure.Users;
+using CaptionGen.Infrastructure.Common;
+using JwtOptions = CaptionGen.Infrastructure.Auth.JwtOptions;
 using CaptionGen.Application.Common.Validation;
 using FluentValidation;
 using MediatR;
@@ -29,33 +33,29 @@ using Stripe;
 
 static void LoadEnvFiles()
 {
-    var candidates = new[]
+    var assemblyDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+    if (string.IsNullOrWhiteSpace(assemblyDirectory))
     {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
-        Path.Combine(AppContext.BaseDirectory, ".env"),
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env")),
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".env"))
-    };
+        return;
+    }
 
-    foreach (var path in candidates.Distinct())
+    // Always use the API project's .env so configuration does not change
+    // based on the shell working directory used to launch the process.
+    var path = Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", "..", ".env"));
+    if (!System.IO.File.Exists(path)) return;
+
+    foreach (var line in System.IO.File.ReadAllLines(path))
     {
-        if (!System.IO.File.Exists(path)) continue;
+        var trimmed = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#")) continue;
+        var separatorIndex = trimmed.IndexOf('=', StringComparison.Ordinal);
+        if (separatorIndex <= 0) continue;
 
-        foreach (var line in System.IO.File.ReadAllLines(path))
-        {
-            var trimmed = line.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#")) continue;
-            var separatorIndex = trimmed.IndexOf('=', StringComparison.Ordinal);
-            if (separatorIndex <= 0) continue;
+        var key = trimmed[..separatorIndex].Trim();
+        var value = trimmed[(separatorIndex + 1)..].Trim();
+        if (string.IsNullOrWhiteSpace(key)) continue;
 
-            var key = trimmed[..separatorIndex].Trim();
-            var value = trimmed[(separatorIndex + 1)..].Trim();
-            if (string.IsNullOrWhiteSpace(key)) continue;
-
-            Environment.SetEnvironmentVariable(key, value);
-        }
-
-        break;
+        Environment.SetEnvironmentVariable(key, value);
     }
 }
 
@@ -80,6 +80,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
 builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
 builder.Services.AddHostedService<ScheduledPostWorker>();
@@ -87,13 +88,21 @@ builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 builder.Services.AddScoped<IUsageService, UsageService>();
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddScoped<IPaymentWebhookService, StripeWebhookService>();
+builder.Services.AddSingleton<IContentPolicy, ContentPolicy>();
+builder.Services.AddSingleton<ITimezoneService, TimezoneService>();
 
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<AiServiceOptions>(
     builder.Configuration.GetSection(AiServiceOptions.SectionName));
 builder.Services.Configure<MediaStorageOptions>(
     builder.Configuration.GetSection(MediaStorageOptions.SectionName));
 builder.Services.Configure<StripeOptions>(
     builder.Configuration.GetSection(StripeOptions.SectionName));
+builder.Services.Configure<ContentPolicyOptions>(
+    builder.Configuration.GetSection(ContentPolicyOptions.SectionName));
+builder.Services.Configure<SchedulingOptions>(
+    builder.Configuration.GetSection(SchedulingOptions.SectionName));
 
 builder.Services.AddHttpClient("AiService.Health", (sp, client) =>
 {
@@ -152,10 +161,8 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins")
         "https://localhost:5012"
     };
 
-var jwtKey = builder.Configuration["Jwt:Key"]!;
-var issuer = builder.Configuration["Jwt:Issuer"]!;
-var audience = builder.Configuration["Jwt:Audience"]!;
-var cookieName = builder.Configuration["Jwt:CookieName"]!;
+var jwtOpts = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+    ?? throw new InvalidOperationException("Jwt configuration section is missing.");
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -167,9 +174,9 @@ builder.Services
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidIssuer = jwtOpts.Issuer,
+            ValidAudience = jwtOpts.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOpts.Key)),
             ClockSkew = TimeSpan.FromSeconds(10)
         };
 
@@ -177,7 +184,7 @@ builder.Services
         {
             OnMessageReceived = ctx =>
             {
-                if (ctx.Request.Cookies.TryGetValue(cookieName, out var token))
+                if (ctx.Request.Cookies.TryGetValue(jwtOpts.CookieName, out var token))
                     ctx.Token = token;
 
                 return Task.CompletedTask;

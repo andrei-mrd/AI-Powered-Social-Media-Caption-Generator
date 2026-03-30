@@ -5,18 +5,12 @@ using MediatR;
 
 namespace CaptionGen.Application.Posts;
 
-public sealed class CreatePostHandler 
+public sealed class CreatePostHandler
     : IRequestHandler<CreatePostCommand, CreatePostResponse>
 {
     private readonly IPostRepository _posts;
     private readonly IAiCaptionService _ai;
     private readonly IUsageService _usage;
-
-    private static readonly HashSet<string> AllowedPlatforms =
-        new(StringComparer.OrdinalIgnoreCase) { "instagram", "tiktok", "linkedin" };
-
-    private static readonly HashSet<string> AllowedTones =
-        new(StringComparer.OrdinalIgnoreCase) { "funny", "professional", "inspirational" };
 
     public CreatePostHandler(IPostRepository posts, IAiCaptionService ai, IUsageService usage)
     {
@@ -29,15 +23,17 @@ public sealed class CreatePostHandler
         CreatePostCommand request,
         CancellationToken cancellationToken)
     {
+        // Validation is enforced by the MediatR pipeline (CreatePostCommandValidator).
+        // Normalize values here for consistent storage in the domain entity.
         var description = (request.Description ?? string.Empty).Trim();
         var platform = (request.Platform ?? string.Empty).Trim().ToLowerInvariant();
         var tone = (request.Tone ?? string.Empty).Trim().ToLowerInvariant();
         var language = (request.Language ?? string.Empty).Trim().ToLowerInvariant();
-        var goal = (request.Goal ?? string.Empty).Trim();
+        var goal = (request.Goal ?? string.Empty).Trim().ToLowerInvariant();
         var captionLength = (request.CaptionLength ?? "medium").Trim().ToLowerInvariant();
         var includeEmojis = request.IncludeEmojis;
         var includeCta = request.IncludeCta;
-        var hashtagCount = request.HashtagCount <= 0 ? 12 : request.HashtagCount;
+        var hashtagCount = request.HashtagCount;
         var audience = request.Audience?.Trim();
         var brandVoice = request.BrandVoice?.Trim();
         var forbiddenWords = (request.ForbiddenWords ?? Array.Empty<string>())
@@ -49,30 +45,6 @@ public sealed class CreatePostHandler
             .Select(x => x.Trim())
             .ToArray();
         var count = request.Count;
-
-        if (string.IsNullOrWhiteSpace(description))
-            throw new InvalidOperationException("Description is required.");
-
-        if (!AllowedPlatforms.Contains(platform))
-            throw new InvalidOperationException("Platform must be instagram, tiktok, or linkedin.");
-
-        if (!AllowedTones.Contains(tone))
-            throw new InvalidOperationException("Tone must be funny, professional, or inspirational.");
-
-        if (count is < 1 or > 10)
-            throw new InvalidOperationException("Count must be between 1 and 10.");
-
-        if (string.IsNullOrWhiteSpace(language))
-            throw new InvalidOperationException("Language is required.");
-
-        if (string.IsNullOrWhiteSpace(goal))
-            throw new InvalidOperationException("Goal is required.");
-
-        if (captionLength is not ("short" or "medium" or "long"))
-            throw new InvalidOperationException("Caption length must be short, medium, or long.");
-
-        if (hashtagCount is < 5 or > 20)
-            throw new InvalidOperationException("Hashtag count must be between 5 and 20.");
 
         var options = new CaptionGenerationOptions(
             language,

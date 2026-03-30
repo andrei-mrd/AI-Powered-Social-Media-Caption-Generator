@@ -15,10 +15,12 @@ namespace CaptionGen.Api.Controllers;
 public sealed class PaymentsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IPaymentWebhookService _webhookService;
 
-    public PaymentsController(IMediator mediator)
+    public PaymentsController(IMediator mediator, IPaymentWebhookService webhookService)
     {
         _mediator = mediator;
+        _webhookService = webhookService;
     }
 
     [HttpPost("checkout-session")]
@@ -66,17 +68,16 @@ public sealed class PaymentsController : ControllerBase
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync();
 
-        var service = HttpContext.RequestServices.GetRequiredService<IPaymentWebhookService>();
         try
         {
-            await service.HandleAsync(payload, signature, ct);
+            await _webhookService.HandleAsync(payload, signature, ct);
             return Ok();
         }
         catch (PaymentServiceException ex)
         {
             var status = ex.IsClientError
                 ? StatusCodes.Status400BadRequest
-                : StatusCodes.Status400BadRequest;
+                : StatusCodes.Status500InternalServerError;
             return StatusCode(status, BuildProblem(status, "Webhook rejected", ex.Message));
         }
         catch (Exception)

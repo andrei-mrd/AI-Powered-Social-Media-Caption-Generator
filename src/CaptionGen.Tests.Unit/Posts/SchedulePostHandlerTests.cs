@@ -1,3 +1,4 @@
+using CaptionGen.Application.Common.Time;
 using CaptionGen.Application.Posts;
 using CaptionGen.Domain.Posts;
 using FluentAssertions;
@@ -35,7 +36,10 @@ public sealed class SchedulePostHandlerTests
         repo.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new SchedulePostHandler(repo.Object);
+        var timezone = new Mock<ITimezoneService>(MockBehavior.Strict);
+        timezone.Setup(x => x.ToUtc(It.IsAny<DateTime>())).Returns<DateTime>(dt => dt);
+
+        var sut = new SchedulePostHandler(repo.Object, timezone.Object);
 
         await sut.Handle(
             new SchedulePostCommand(userId, postId, scheduled, 1, new[] { mediaId }),
@@ -73,7 +77,10 @@ public sealed class SchedulePostHandlerTests
         repo.Setup(x => x.GetByIdWithCaptionsAndMediaAsync(postId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(post);
 
-        var sut = new SchedulePostHandler(repo.Object);
+        var timezone = new Mock<ITimezoneService>(MockBehavior.Strict);
+        timezone.Setup(x => x.ToUtc(It.IsAny<DateTime>())).Returns<DateTime>(dt => dt);
+
+        var sut = new SchedulePostHandler(repo.Object, timezone.Object);
 
         var act = () => sut.Handle(
             new SchedulePostCommand(userId, postId, DateTime.UtcNow.AddMinutes(5), 5, Array.Empty<Guid>()),
@@ -105,7 +112,10 @@ public sealed class SchedulePostHandlerTests
         repo.Setup(x => x.GetByIdWithCaptionsAndMediaAsync(postId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(post);
 
-        var sut = new SchedulePostHandler(repo.Object);
+        var timezone = new Mock<ITimezoneService>(MockBehavior.Strict);
+        timezone.Setup(x => x.ToUtc(It.IsAny<DateTime>())).Returns<DateTime>(dt => dt);
+
+        var sut = new SchedulePostHandler(repo.Object, timezone.Object);
 
         var act = () => sut.Handle(
             new SchedulePostCommand(userId, postId, DateTime.UtcNow.AddMinutes(-10), 0, Array.Empty<Guid>()),

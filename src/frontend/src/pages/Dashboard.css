@@ -301,3 +301,19 @@
     grid-row: auto;
   }
 }
+
+/* Plan-updated success banner */
+.plan-updated-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  animation: fade-in 300ms ease;
+}

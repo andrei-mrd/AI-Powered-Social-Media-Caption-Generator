@@ -30,6 +30,11 @@ public sealed class StripePaymentService : IPaymentService
         var priceId = ResolvePriceId(planSlug);
         var successUrl = EnsureUrl(_options.SuccessUrl, "Stripe:SuccessUrl");
         var cancelUrl = EnsureUrl(_options.CancelUrl, "Stripe:CancelUrl");
+        var metadata = new Dictionary<string, string>
+        {
+            { "userId", userId.ToString() },
+            { "plan", planSlug }
+        };
 
         try
         {
@@ -37,6 +42,7 @@ public sealed class StripePaymentService : IPaymentService
                 new SessionCreateOptions
                 {
                     Mode = "subscription",
+                    ClientReferenceId = userId.ToString(),
                     SuccessUrl = successUrl,
                     CancelUrl = cancelUrl,
                     LineItems = new List<SessionLineItemOptions>
@@ -47,10 +53,10 @@ public sealed class StripePaymentService : IPaymentService
                             Quantity = 1
                         }
                     },
-                    Metadata = new Dictionary<string, string>
+                    Metadata = new Dictionary<string, string>(metadata),
+                    SubscriptionData = new SessionSubscriptionDataOptions
                     {
-                        { "userId", userId.ToString() },
-                        { "plan", planSlug }
+                        Metadata = new Dictionary<string, string>(metadata)
                     }
                 },
                 requestOptions: null,

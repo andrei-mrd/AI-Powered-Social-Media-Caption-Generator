@@ -1,16 +1,26 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity, RefreshCw, CheckCircle } from 'lucide-react';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { normalizeError } from '../utils/api';
 import { startStripeCheckout } from '../payments/checkout';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const location = useLocation();
   const { data: entitlement, error: entitlementError, loading, refresh } = useEntitlements(20000);
   const [planSlug, setPlanSlug] = useState('influencer');
   const [checkoutError, setCheckoutError] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showPlanBanner, setShowPlanBanner] = useState(
+    () => !!(location.state as { planJustUpdated?: boolean } | null)?.planJustUpdated
+  );
+
+  useEffect(() => {
+    if (!showPlanBanner) return;
+    const id = window.setTimeout(() => setShowPlanBanner(false), 5000);
+    return () => window.clearTimeout(id);
+  }, [showPlanBanner]);
 
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
@@ -32,6 +42,14 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container animate-fade-in">
+      {showPlanBanner && (
+        <div className="plan-updated-banner">
+          <CheckCircle size={16} />
+          {entitlement
+            ? `Plan updated to ${entitlement.planName}`
+            : 'Plan updated — fetching details…'}
+        </div>
+      )}
       <header className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>

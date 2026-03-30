@@ -31,17 +31,6 @@ public sealed class ImproveCaptionHandlerTests
         ai.VerifyAll();
     }
 
-    [Fact]
-    public async Task Handle_WithInvalidPlatform_ShouldThrow()
-    {
-        var ai = new Mock<IAiCaptionService>(MockBehavior.Strict);
-        var sut = new ImproveCaptionHandler(ai.Object);
-
-        var act = () => sut.Handle(
-            new ImproveCaptionCommand("caption", "facebook", "funny", "en", "engagement"),
-            CancellationToken.None);
-
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*instagram, tiktok, or linkedin*");
-    }
+    // Input validation (platform, tone, goal, etc.) is enforced by ImproveCaptionCommandValidator
+    // via the MediatR pipeline before the handler runs. Validation is tested in CommandValidatorsTests.
 }
