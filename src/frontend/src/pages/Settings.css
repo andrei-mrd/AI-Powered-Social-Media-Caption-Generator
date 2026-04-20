@@ -1,0 +1,164 @@
+.settings-shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.settings-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+  opacity: 0.5;
+}
+
+.platform-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.platform-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: var(--card-bg, rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: border-color 0.2s;
+}
+
+.platform-card.connected {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.platform-card.coming-soon {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.platform-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.platform-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.platform-icon.linkedin { background: #0a66c2; }
+.platform-icon.instagram { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+.platform-icon.tiktok { background: #000; border: 1px solid rgba(255,255,255,0.1); }
+
+.platform-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.platform-user {
+  display: block;
+  font-size: 0.8rem;
+  color: #4ade80;
+  margin-top: 2px;
+}
+
+.platform-sub {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.platform-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.badge-connected {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #4ade80;
+  font-weight: 500;
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-ghost.danger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.btn-ghost.danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.85rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alert.success {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.alert.error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+.muted {
+  color: var(--muted, rgba(255,255,255,0.45));
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

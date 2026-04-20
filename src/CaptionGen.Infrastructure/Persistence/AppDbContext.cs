@@ -1,6 +1,7 @@
 using CaptionGen.Domain.Users;
 using CaptionGen.Domain.Posts;
 using CaptionGen.Domain.Entitlements;
+using CaptionGen.Domain.Social;
 using Microsoft.EntityFrameworkCore;
 
 namespace CaptionGen.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<UserEntitlement> UserEntitlements => Set<UserEntitlement>();
     public DbSet<UserUsage> UserUsages => Set<UserUsage>();
+    public DbSet<SocialAccount> SocialAccounts => Set<SocialAccount>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -187,6 +189,29 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
 
             b.HasIndex(x => new { x.UserId, x.PeriodStartUtc }).IsUnique();
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SocialAccount>(b =>
+        {
+            b.ToTable("social_accounts");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.Platform).HasColumnName("platform").HasMaxLength(32).IsRequired();
+            b.Property(x => x.PlatformUserId).HasColumnName("platform_user_id").HasMaxLength(128).IsRequired();
+            b.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(256).IsRequired();
+            b.Property(x => x.AccessTokenEncrypted).HasColumnName("access_token_encrypted").HasMaxLength(2048).IsRequired();
+            b.Property(x => x.RefreshTokenEncrypted).HasColumnName("refresh_token_encrypted").HasMaxLength(2048);
+            b.Property(x => x.TokenExpiresAtUtc).HasColumnName("token_expires_at_utc").IsRequired();
+            b.Property(x => x.ConnectedAtUtc).HasColumnName("connected_at_utc").IsRequired();
+
+            b.HasIndex(x => new { x.UserId, x.Platform }).IsUnique();
 
             b.HasOne<User>()
                 .WithMany()

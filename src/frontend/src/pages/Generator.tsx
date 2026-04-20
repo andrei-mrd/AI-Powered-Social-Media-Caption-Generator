@@ -1,8 +1,19 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Hash, Copy, CheckCircle2, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { readApiError, normalizeError } from '../utils/api';
 import './Generator.css';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 export default function Generator() {
   const [topic, setTopic] = useState('');
@@ -71,8 +82,6 @@ export default function Generator() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  // The post is already persisted on generate. The Save button marks which
-  // variant the user prefers and navigates them to My Posts.
   const handleSaveSelected = () => {
     if (selectedIndex === null) return;
     setSavedIndex(selectedIndex);
@@ -84,16 +93,14 @@ export default function Generator() {
     setSavedIndex(null);
   };
 
-  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, index: number) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleSelectCard(index);
-    }
-  };
-
   return (
-    <div className="generator-layout animate-fade-in">
-      <div className="config-panel">
+    <motion.div 
+      className="generator-layout"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div variants={itemVariants} className="config-panel glass-panel">
         <div className="panel-header">
           <h1 className="panel-title">Create Post</h1>
           <p className="panel-subtitle">Configure your narrative</p>
@@ -105,11 +112,11 @@ export default function Generator() {
             <p className="help-text">Give us a rough idea, product name, or key message.</p>
             <textarea 
               id="topic" 
-              rows={4}
+              rows={5}
               placeholder="e.g. Launching our new summer collection next week entirely focused on premium sustainable cotton..."
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              className="resize-none"
+              className="resize-none generator-textarea"
               required
             />
           </div>
@@ -122,6 +129,7 @@ export default function Generator() {
                   <option value="instagram">Instagram</option>
                   <option value="tiktok">TikTok</option>
                   <option value="linkedin">LinkedIn</option>
+                  <option value="twitter">Twitter / X</option>
                 </select>
               </div>
             </div>
@@ -132,6 +140,7 @@ export default function Generator() {
                   <option value="professional">Professional</option>
                   <option value="funny">Funny</option>
                   <option value="inspirational">Inspirational</option>
+                  <option value="punchy">Punchy</option>
                 </select>
               </div>
             </div>
@@ -148,111 +157,145 @@ export default function Generator() {
             </div>
           </div>
 
-          {error && <div className="alert error mt-4">{error}</div>}
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="alert error mt-4"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="form-footer mt-auto pt-6 border-t border-subtle">
-            <button type="submit" className="btn-generate" disabled={isGenerating || !topic}>
+          <div className="form-footer mt-auto pt-6">
+            <button type="submit" className="btn btn-primary w-full btn-generate" disabled={isGenerating || !topic}>
               {isGenerating ? (
-                <><div className="pulse-loader"></div> Crafting...</>
+                <><div className="pulse-loader"></div> Crafting magic...</>
               ) : (
                 <><Sparkles size={18} /> Generate Captions</>
               )}
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
 
-      <div className="preview-panel">
-        {!isGenerating && !result && (
-          <div className="empty-canvas">
-            <div className="empty-icon-box">
-              <Sparkles size={24} className="text-gray-400" />
-            </div>
-            <h3>Your canvas is ready</h3>
-            <p>Fill out the configuration on the left and hit generate to see your results.</p>
-          </div>
-        )}
-
-        {isGenerating && (
-          <div className="empty-canvas">
-            <div className="pulse-loader large mb-4"></div>
-            <h3>Analyzing context</h3>
-            <p>Our AI is writing multiple variations for {platform}...</p>
-          </div>
-        )}
-
-        {result && !isGenerating && (
-          <div className="results-view animate-slide-up">
-            <div className="results-header">
-              <div className="results-title">
-                <h2>Generated Options</h2>
-                <span className="badge">{result.platform}</span>
+      <motion.div variants={itemVariants} className="preview-panel">
+        <AnimatePresence mode="wait">
+          {!isGenerating && !result && (
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="empty-canvas glass-panel"
+            >
+              <div className="welcome-visual-circle">
+                <Sparkles size={32} className="text-indigo-500" />
               </div>
-              <button
-                type="button"
-                className={`save-btn save-all-btn ${savedIndex !== null ? 'saved' : ''}`}
-                onClick={handleSaveSelected}
-                disabled={selectedIndex === null || savedIndex !== null}
-              >
-                {savedIndex !== null ? <CheckCircle2 size={16} className="text-green-500" /> : <Bookmark size={16} />}
-                {savedIndex !== null ? 'Saved to My Posts' : 'Save Selected'}
-              </button>
-            </div>
+              <h3>Your canvas is ready</h3>
+              <p>Fill out the configuration on the left and hit generate to see your results.</p>
+            </motion.div>
+          )}
 
-            <div className="options-list">
-              {result.captions.map((cap: string, i: number) => (
-                <div
-                  key={i}
-                  className={`result-card ${selectedIndex === i ? 'selected' : ''}`}
-                  onClick={() => handleSelectCard(i)}
-                  onKeyDown={(e) => handleCardKeyDown(e, i)}
-                  tabIndex={0}
-                  role="button"
-                  aria-pressed={selectedIndex === i}
+          {isGenerating && (
+            <motion.div 
+              key="generating"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="empty-canvas glass-panel generating-state"
+            >
+              <div className="loader-container">
+                <div className="spinner-ring"></div>
+                <div className="spinner-center"></div>
+              </div>
+              <h3>Analyzing context</h3>
+              <p>Our AI is writing multiple variations based on best practices for {platform}...</p>
+            </motion.div>
+          )}
+
+          {result && !isGenerating && (
+            <motion.div 
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="results-view"
+            >
+              <div className="results-header">
+                <div className="results-title">
+                  <h2>Generated Options</h2>
+                  <span className="badge badge-subtle">{result.platform}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`btn ${savedIndex !== null ? 'btn-secondary text-green-600' : 'btn-primary'}`}
+                  onClick={handleSaveSelected}
+                  disabled={selectedIndex === null || savedIndex !== null}
                 >
-                  <div className="card-top">
-                    <span className="option-label">Option {i + 1}</span>
-                    <div className="card-actions">
-                      {selectedIndex === i && (
-                        <span className="selected-pill">
-                          <span className="selected-dot" aria-hidden="true"></span>
-                          Selected
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        className="copy-btn" 
-                        onClick={(e) => { e.stopPropagation(); copyToClipboard(cap, i); }}
-                        aria-label="Copy to clipboard"
-                      >
-                        {copiedIndex === i ? <CheckCircle2 size={16} className="text-green-500" /> : <Copy size={16} />}
-                        {copiedIndex === i ? 'Copied' : 'Copy'}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="card-body">
-                    {cap}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {result.hashtags && result.hashtags.length > 0 && (
-              <div className="hashtags-box">
-                <div className="hash-header">
-                  <Hash size={16} className="text-gray-500" />
-                  <h4 className="hashtags-title">Recommended Tags</h4>
-                </div>
-                <div className="tags-list">
-                  {result.hashtags.map((tag: string, i: number) => (
-                    <span key={i} className="hashtag">{tag}</span>
-                  ))}
-                </div>
+                  {savedIndex !== null ? <CheckCircle2 size={16} /> : <Bookmark size={16} />}
+                  {savedIndex !== null ? 'Saved to Library' : 'Save Selected'}
+                </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+
+              <div className="options-list">
+                {result.captions.map((cap: string, i: number) => (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    key={i}
+                    className={`result-card ${selectedIndex === i ? 'selected' : ''}`}
+                    onClick={() => handleSelectCard(i)}
+                  >
+                    <div className="card-top">
+                      <span className="option-label">Option {i + 1}</span>
+                      <div className="card-actions">
+                        {selectedIndex === i && (
+                          <span className="selected-pill">
+                            <span className="selected-dot"></span> Selected
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="copy-btn" 
+                          onClick={(e) => { e.stopPropagation(); copyToClipboard(cap, i); }}
+                        >
+                          {copiedIndex === i ? <CheckCircle2 size={16} className="text-green-500" /> : <Copy size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="card-body">
+                      {cap}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {result.hashtags && result.hashtags.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="hashtags-box glass-panel"
+                >
+                  <div className="hash-header">
+                    <Hash size={16} className="text-indigo-500" />
+                    <h4 className="hashtags-title">Recommended Tags</h4>
+                  </div>
+                  <div className="tags-list">
+                    {result.hashtags.map((tag: string, i: number) => (
+                      <span key={i} className="hashtag">{tag}</span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,7 +1,26 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, LogOut, ChevronRight, History, PenTool } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { LayoutDashboard, LogOut, ChevronRight, History, PenTool, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AppLayout.css';
+
+const sidebarVariants = {
+  hidden: { x: -20, opacity: 0 },
+  visible: { 
+    x: 0, 
+    opacity: 1,
+    transition: { 
+      duration: 0.5, 
+      ease: "easeOut",
+      staggerChildren: 0.1 
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { x: -10, opacity: 0 },
+  visible: { x: 0, opacity: 1 }
+};
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -13,46 +32,67 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="app-shell animate-fade-in">
-      <nav className="glass-sidebar">
+    <div className="app-shell bg-gradient-mesh">
+      <motion.nav 
+        className="glass-sidebar"
+        initial="hidden"
+        animate="visible"
+        variants={sidebarVariants}
+      >
         <div className="brand">
           <div className="brand-dot" />
-          <span>CaptionGen</span>
+          <span className="text-gradient">CaptionGen</span>
         </div>
 
         <div className="nav-links">
-          <span className="nav-section">Application</span>
-          <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-            <LayoutDashboard size={18} />
-            <span>Dashboard</span>
-          </NavLink>
+          <motion.span variants={itemVariants} className="nav-section">Application</motion.span>
+          <motion.div variants={itemVariants}>
+            <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <LayoutDashboard size={18} />
+              <span>Overview</span>
+            </NavLink>
+          </motion.div>
 
-          <span className="nav-section mt-4">Tools</span>
-          <NavLink to="/create-post" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-            <PenTool size={18} />
-            <span>Make a Post</span>
-          </NavLink>
-          <NavLink to="/posts" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-            <History size={18} />
-            <span>My Posts</span>
-          </NavLink>
+          <motion.span variants={itemVariants} className="nav-section mt-4">Tools</motion.span>
+          <motion.div variants={itemVariants}>
+            <NavLink to="/create-post" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <PenTool size={18} />
+              <span>Content Flow</span>
+            </NavLink>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <NavLink to="/posts" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <History size={18} />
+              <span>Library</span>
+            </NavLink>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <NavLink to="/settings" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <Settings size={18} />
+              <span>Connections</span>
+            </NavLink>
+          </motion.div>
         </div>
 
-        <div className="nav-footer">
+        <motion.div variants={itemVariants} className="nav-footer">
           {user && (
-            <div className="user-info">
-              <span className="user-email">{user.email}</span>
+            <div className="user-profile-card">
+              <div className="user-avatar">{user.email?.charAt(0).toUpperCase() || 'U'}</div>
+              <div className="user-info">
+                <span className="user-email">{user.email}</span>
+                <span className="user-role">Creator</span>
+              </div>
             </div>
           )}
           <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={18} />
             <span>Sign out</span>
-            <ChevronRight size={16} className="ml-auto" />
+            <ChevronRight size={16} className="ml-auto opacity-50" />
           </button>
-        </div>
-      </nav>
+        </motion.div>
+      </motion.nav>
 
-      <main className="content-area">
+      <main className="content-area animate-fade-in">
         <Outlet />
       </main>
     </div>

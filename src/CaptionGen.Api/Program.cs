@@ -17,6 +17,8 @@ using CaptionGen.Infrastructure.Persistence;
 using CaptionGen.Infrastructure.Posts;
 using CaptionGen.Infrastructure.Users;
 using CaptionGen.Infrastructure.Common;
+using CaptionGen.Infrastructure.Social;
+using CaptionGen.Application.Social;
 using JwtOptions = CaptionGen.Infrastructure.Auth.JwtOptions;
 using CaptionGen.Application.Common.Validation;
 using FluentValidation;
@@ -91,6 +93,12 @@ builder.Services.AddScoped<IPaymentWebhookService, StripeWebhookService>();
 builder.Services.AddSingleton<IContentPolicy, ContentPolicy>();
 builder.Services.AddSingleton<ITimezoneService, TimezoneService>();
 
+builder.Services.AddScoped<ISocialAccountRepository, SocialAccountRepository>();
+builder.Services.AddSingleton<ITokenEncryptionService, AesTokenEncryptionService>();
+builder.Services.AddHttpClient<ILinkedInOAuthService, LinkedInOAuthService>();
+builder.Services.AddHttpClient<LinkedInPublisher>();
+builder.Services.AddTransient<ISocialPublisher, LinkedInPublisher>();
+
 builder.Services.Configure<JwtOptions>(
     builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<AiServiceOptions>(
@@ -103,6 +111,10 @@ builder.Services.Configure<ContentPolicyOptions>(
     builder.Configuration.GetSection(ContentPolicyOptions.SectionName));
 builder.Services.Configure<SchedulingOptions>(
     builder.Configuration.GetSection(SchedulingOptions.SectionName));
+builder.Services.Configure<LinkedInOptions>(
+    builder.Configuration.GetSection(LinkedInOptions.SectionName));
+builder.Services.Configure<TokenEncryptionOptions>(
+    builder.Configuration.GetSection(TokenEncryptionOptions.SectionName));
 
 builder.Services.AddHttpClient("AiService.Health", (sp, client) =>
 {

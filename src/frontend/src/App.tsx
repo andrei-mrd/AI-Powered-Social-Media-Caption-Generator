@@ -10,6 +10,7 @@ import CreatePostFlow from './pages/CreatePostFlow'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import CheckoutResult from './pages/CheckoutResult'
+import Settings from './pages/Settings'
 
 function App() {
   return (
@@ -33,6 +34,9 @@ function App() {
           } />
           <Route path="/create-post" element={
             <ProtectedRoute><CreatePostFlow /></ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute><Settings /></ProtectedRoute>
           } />
         </Route>
       </Routes>

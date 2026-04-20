@@ -1,5 +1,8 @@
 using CaptionGen.Application.Common.Time;
 using CaptionGen.Application.Posts;
+using CaptionGen.Application.Social;
+using CaptionGen.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -49,6 +52,8 @@ public sealed class ScheduledPostWorker : BackgroundService
     {
         using var scope = _services.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var publishers = scope.ServiceProvider.GetServices<ISocialPublisher>().ToList();
 
         var due = await repo.AcquireDueScheduledAsync(DateTime.UtcNow, _batchSize, ct);
         if (due.Count == 0) return;
@@ -57,8 +62,30 @@ public sealed class ScheduledPostWorker : BackgroundService
         {
             try
             {
-                // Placeholder publisher: simulate latency then mark published.
-                await Task.Delay(TimeSpan.FromSeconds(1), ct);
+                var selectedCaption = post.Captions.FirstOrDefault(c => c.IsSelected)
+                    ?? post.Captions.OrderBy(c => c.VariantIndex).FirstOrDefault();
+
+                if (selectedCaption is not null)
+                {
+                    var account = await db.SocialAccounts
+                        .FirstOrDefaultAsync(a => a.UserId == post.UserId && a.Platform == post.Platform, ct);
+
+                    if (account is not null)
+                    {
+                        var publisher = publishers.FirstOrDefault(p => p.Platform == post.Platform);
+                        if (publisher is not null)
+                            await publisher.PublishAsync(account, selectedCaption.Text, ct);
+                        else
+                            _logger.LogWarning("No publisher registered for platform {Platform}", post.Platform);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Post {PostId} scheduled for {Platform} but user has no connected account",
+                            post.Id, post.Platform);
+                    }
+                }
+
                 post.Status = "published";
             }
             catch (Exception ex)
