@@ -1,0 +1,6 @@
+﻿/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Tests.Integration/Api/ApiEndpointsTests.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Tests.Integration/Infra/CaptionGenApiFactory.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Tests.Integration/Infra/TestAuthHandler.cs
+/Users/mardareandreidaniel/.nuget/packages/microsoft.net.test.sdk/17.14.1/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs
+/Users/mardareandreidaniel/.nuget/packages/xunit.runner.visualstudio/3.1.4/build/net8.0/xunit.abstractions.dll
+/Users/mardareandreidaniel/.nuget/packages/xunit.runner.visualstudio/3.1.4/build/net8.0/xunit.runner.visualstudio.testadapter.dll

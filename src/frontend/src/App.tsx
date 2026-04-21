@@ -11,6 +11,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import CheckoutResult from './pages/CheckoutResult'
 import Settings from './pages/Settings'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/checkout/success" element={<CheckoutResult />} />
         <Route path="/checkout/cancel" element={<CheckoutResult />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
 
         {/* Protected app pages (with sidebar) */}
         <Route element={<AppLayout />}>

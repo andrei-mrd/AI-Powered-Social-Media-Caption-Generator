@@ -1,0 +1,9 @@
+﻿/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Entitlements/Plan.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Entitlements/UserEntitlement.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Entitlements/UserUsage.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Posts/Caption.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Posts/MediaAsset.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Posts/Post.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Posts/PostMedia.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Social/SocialAccount.cs
+/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/src/CaptionGen.Domain/Users/User.cs

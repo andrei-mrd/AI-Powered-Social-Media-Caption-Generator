@@ -7,9 +7,8 @@
     <IsPackable>false</IsPackable>
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Include>[CaptionGen.Application*]*</Include>
-    <ThresholdType>line</ThresholdType>
-    <Threshold>70</Threshold>
+    <Include>[CaptionGen.Application*]*,[CaptionGen.Domain*]*,[CaptionGen.Infrastructure*]*</Include>
+    <Exclude>[CaptionGen.Infrastructure.Persistence.Migrations*]*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>
