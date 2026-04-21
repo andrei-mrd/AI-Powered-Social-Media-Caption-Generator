@@ -165,10 +165,11 @@
   <LocalSettings>
     <Property Name="sonar.host.url">http://localhost:9000</Property>
     <Property Name="sonar.projectBaseDir">/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator</Property>
+    <Property Name="sonar.coverage.exclusions">**/Migrations/**,**/Program.cs</Property>
     <Property Name="sonar.cs.opencover.reportsPaths">/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/TestResults/**/coverage.opencover.xml</Property>
     <Property Name="sonar.python.coverage.reportPaths">/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/ai-service/coverage.xml</Property>
     <Property Name="sonar.python.version">3</Property>
-    <Property Name="sonar.exclusions">**/obj/**,**/bin/**,**/*.Designer.cs,**/Migrations/**,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/TestResults/**/coverage.opencover.xml</Property>
+    <Property Name="sonar.exclusions">**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,/Users/mardareandreidaniel/Projects/AI-Powered-Social-Media-Caption-Generator/TestResults/**/coverage.opencover.xml</Property>
   </LocalSettings>
   <ScannerOptsSettings />
   <AnalyzersSettings>

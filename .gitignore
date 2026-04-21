@@ -101,7 +101,7 @@ htmlcov/
 ############################
 .env
 .env.*
-media/
+src/CaptionGen.Api/media/
 
 ############################
 # Node / frontend

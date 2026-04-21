@@ -44,7 +44,8 @@ dotnet sonarscanner begin \
   /d:sonar.projectBaseDir="$ROOT" \
   /d:sonar.sources="src,ai-service" \
   /d:sonar.tests="src/CaptionGen.Tests.Unit,src/CaptionGen.Tests.Integration,ai-service/tests" \
-  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/Migrations/**,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**" \
+  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**" \
+  /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs" \
   /d:sonar.cs.opencover.reportsPaths="$ROOT/TestResults/**/coverage.opencover.xml" \
   /d:sonar.python.coverage.reportPaths="$ROOT/ai-service/coverage.xml" \
   /d:sonar.python.version=3
