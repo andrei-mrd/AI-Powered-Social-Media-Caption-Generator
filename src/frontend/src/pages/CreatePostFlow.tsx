@@ -29,6 +29,23 @@ interface CreateResponse {
   traceId?: string;
 }
 
+function SelectedCaptionPreview({ caption }: { caption?: CaptionVariant }) {
+  if (!caption) {
+    return <>Pick a caption first</>;
+  }
+
+  return (
+    <>
+      <Tag size={14} /> {caption.text}
+      {caption.hashtags?.length ? (
+        <div className="selected-caption-hashtags">
+          {caption.hashtags.map((hashtag, index) => <span key={index} className="badge">{hashtag}</span>)}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export default function CreatePostFlow() {
   const [step, setStep] = useState<Step>('media');
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -97,7 +114,6 @@ export default function CreatePostFlow() {
     }
   };
 
-  const canNextMedia = step === 'media' ? true : true;
   const canNextContent = step === 'content' ? !!postId && selectedCaptionIdx !== null : true;
 
   const goNext = () => {
@@ -281,7 +297,7 @@ export default function CreatePostFlow() {
             ))}
           </div>
           <div className="flow-actions">
-            <button className="btn-primary" type="button" onClick={goNext} disabled={!canNextMedia}>Next</button>
+            <button className="btn-primary" type="button" onClick={goNext}>Next</button>
           </div>
         </div>
       )}
@@ -453,18 +469,7 @@ export default function CreatePostFlow() {
             <label className="form-block">
               <span>Selected caption</span>
               <div className="selected-caption-box">
-                {selectedCaptionIdx !== null && captions[selectedCaptionIdx]
-                  ? (
-                    <>
-                      <Tag size={14} /> {captions[selectedCaptionIdx].text}
-                      {captions[selectedCaptionIdx].hashtags?.length ? (
-                        <div className="selected-caption-hashtags">
-                          {captions[selectedCaptionIdx].hashtags.map((h, i) => <span key={i} className="badge">{h}</span>)}
-                        </div>
-                      ) : null}
-                    </>
-                  )
-                  : 'Pick a caption first'}
+                <SelectedCaptionPreview caption={selectedCaptionIdx !== null ? captions[selectedCaptionIdx] : undefined} />
               </div>
             </label>
           </div>

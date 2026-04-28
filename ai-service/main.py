@@ -18,10 +18,11 @@ from models import (
 load_dotenv()
 
 _service_singleton: CaptionService | None = None
+UNEXPECTED_SERVER_ERROR = "Unexpected server error."
 
 ERROR_RESPONSES = {
     400: {"description": "Invalid request or AI response."},
-    500: {"description": "Unexpected server error."},
+    500: {"description": UNEXPECTED_SERVER_ERROR},
     502: {"description": "OpenAI API error."},
 }
 
@@ -100,7 +101,7 @@ def generate_caption(
     except OpenAIError as exc:
         raise HTTPException(status_code=502, detail=f"OpenAI API error: {exc}")
     except Exception as exc:
-        raise HTTPException(status_code=500, detail="Unexpected server error.") from exc
+        raise HTTPException(status_code=500, detail=UNEXPECTED_SERVER_ERROR) from exc
 
     metadata = build_caption_metadata(payload, captions, best_idx, media_cues, request.state.trace_id)
     return GenerateCaptionResponse(
@@ -125,7 +126,7 @@ def improve_caption(
     except OpenAIError as exc:
         raise HTTPException(status_code=502, detail=f"OpenAI API error: {exc}")
     except Exception as exc:
-        raise HTTPException(status_code=500, detail="Unexpected server error.") from exc
+        raise HTTPException(status_code=500, detail=UNEXPECTED_SERVER_ERROR) from exc
 
 
 def create_app() -> FastAPI:

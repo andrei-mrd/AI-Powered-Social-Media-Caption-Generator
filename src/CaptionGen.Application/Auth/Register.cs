@@ -20,13 +20,13 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<Guid> Handle(RegisterCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
             throw new InvalidOperationException("Invalid credentials");
 
-        var existing = await _users.GetByEmailAsync(email, ct);
+        var existing = await _users.GetByEmailAsync(email, cancellationToken);
         if (existing is not null)
             throw new InvalidOperationException("Email already used");
 
@@ -38,8 +38,8 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        await _users.AddAsync(user, ct);
-        await _entitlements.AssignPlanAsync(user.Id, "basic", ct);
+        await _users.AddAsync(user, cancellationToken);
+        await _entitlements.AssignPlanAsync(user.Id, "basic", cancellationToken);
         return user.Id;
     }
 }

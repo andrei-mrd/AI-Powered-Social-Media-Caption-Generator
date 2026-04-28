@@ -1,6 +1,7 @@
 using CaptionGen.Application.Common.Time;
 using CaptionGen.Application.Posts;
 using CaptionGen.Application.Social;
+using CaptionGen.Domain.Posts;
 using CaptionGen.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,41 +61,60 @@ public sealed class ScheduledPostWorker : BackgroundService
 
         foreach (var post in due)
         {
-            try
-            {
-                var selectedCaption = post.Captions.FirstOrDefault(c => c.IsSelected)
-                    ?? post.Captions.OrderBy(c => c.VariantIndex).FirstOrDefault();
-
-                if (selectedCaption is not null)
-                {
-                    var account = await db.SocialAccounts
-                        .FirstOrDefaultAsync(a => a.UserId == post.UserId && a.Platform == post.Platform, ct);
-
-                    if (account is not null)
-                    {
-                        var publisher = publishers.FirstOrDefault(p => p.Platform == post.Platform);
-                        if (publisher is not null)
-                            await publisher.PublishAsync(account, selectedCaption.Text, ct);
-                        else
-                            _logger.LogWarning("No publisher registered for platform {Platform}", post.Platform);
-                    }
-                    else
-                    {
-                        _logger.LogWarning(
-                            "Post {PostId} scheduled for {Platform} but user has no connected account",
-                            post.Id, post.Platform);
-                    }
-                }
-
-                post.Status = "published";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to publish post {PostId}", post.Id);
-                post.Status = "failed";
-            }
+            await ProcessPost(post, db, publishers, ct);
         }
 
         await repo.SaveChangesAsync(ct);
+    }
+
+    private async Task ProcessPost(
+        Post post,
+        AppDbContext db,
+        IReadOnlyCollection<ISocialPublisher> publishers,
+        CancellationToken ct)
+    {
+        try
+        {
+            await PublishSelectedCaption(post, db, publishers, ct);
+            post.Status = "published";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish post {PostId}", post.Id);
+            post.Status = "failed";
+        }
+    }
+
+    private async Task PublishSelectedCaption(
+        Post post,
+        AppDbContext db,
+        IReadOnlyCollection<ISocialPublisher> publishers,
+        CancellationToken ct)
+    {
+        var selectedCaption = post.Captions.FirstOrDefault(c => c.IsSelected)
+            ?? post.Captions.OrderBy(c => c.VariantIndex).FirstOrDefault();
+        if (selectedCaption is null)
+        {
+            return;
+        }
+
+        var account = await db.SocialAccounts
+            .FirstOrDefaultAsync(a => a.UserId == post.UserId && a.Platform == post.Platform, ct);
+        if (account is null)
+        {
+            _logger.LogWarning(
+                "Post {PostId} scheduled for {Platform} but user has no connected account",
+                post.Id, post.Platform);
+            return;
+        }
+
+        var publisher = publishers.FirstOrDefault(p => p.Platform == post.Platform);
+        if (publisher is null)
+        {
+            _logger.LogWarning("No publisher registered for platform {Platform}", post.Platform);
+            return;
+        }
+
+        await publisher.PublishAsync(account, selectedCaption.Text, ct);
     }
 }

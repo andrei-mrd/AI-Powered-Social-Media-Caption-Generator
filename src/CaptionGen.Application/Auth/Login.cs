@@ -18,13 +18,13 @@ public sealed class LoginHandler : IRequestHandler<LoginCommand, string>
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<string> Handle(LoginCommand request, CancellationToken ct)
+    public async Task<string> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
             throw new InvalidOperationException("Invalid credentials");
 
-        var user = await _users.GetByEmailAsync(email, ct);
+        var user = await _users.GetByEmailAsync(email, cancellationToken);
         if (user is null)
             throw new InvalidOperationException("Invalid credentials");
 

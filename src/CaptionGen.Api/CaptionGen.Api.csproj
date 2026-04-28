@@ -24,6 +24,7 @@
     <Compile Include="Controllers/PostsController.cs" />
     <Compile Include="Controllers/SocialController.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProgramSetup.cs" />
   </ItemGroup>
 
   <ItemGroup>

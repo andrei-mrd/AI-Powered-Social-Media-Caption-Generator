@@ -24,44 +24,14 @@ using CaptionGen.Application.Common.Validation;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Stripe;
 
-static void LoadEnvFiles()
-{
-    var assemblyDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-    if (string.IsNullOrWhiteSpace(assemblyDirectory))
-    {
-        return;
-    }
-
-    // Always use the API project's .env so configuration does not change
-    // based on the shell working directory used to launch the process.
-    var path = Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", "..", ".env"));
-    if (!System.IO.File.Exists(path)) return;
-
-    foreach (var line in System.IO.File.ReadAllLines(path))
-    {
-        var trimmed = line.Trim();
-        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#")) continue;
-        var separatorIndex = trimmed.IndexOf('=', StringComparison.Ordinal);
-        if (separatorIndex <= 0) continue;
-
-        var key = trimmed[..separatorIndex].Trim();
-        var value = trimmed[(separatorIndex + 1)..].Trim();
-        if (string.IsNullOrWhiteSpace(key)) continue;
-
-        Environment.SetEnvironmentVariable(key, value);
-    }
-}
-
-LoadEnvFiles();
+ProgramSetup.LoadEnvFiles();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,17 +54,7 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
-if (string.Equals(
-        builder.Configuration["MediaStorage:Provider"],
-        "AzureBlob",
-        StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddScoped<IMediaStorageService, AzureBlobMediaStorageService>();
-}
-else
-{
-    builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
-}
+ProgramSetup.AddMediaStorage(builder.Services, builder.Configuration);
 builder.Services.AddHostedService<ScheduledPostWorker>();
 builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 builder.Services.AddScoped<IUsageService, UsageService>();
@@ -126,29 +86,8 @@ builder.Services.Configure<LinkedInOptions>(
 builder.Services.Configure<TokenEncryptionOptions>(
     builder.Configuration.GetSection(TokenEncryptionOptions.SectionName));
 
-builder.Services.AddHttpClient("AiService.Health", (sp, client) =>
-{
-    var options = sp.GetRequiredService<IOptions<AiServiceOptions>>().Value;
-    if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var uri))
-    {
-        throw new InvalidOperationException("AiService:BaseUrl is not a valid absolute URI.");
-    }
-
-    client.BaseAddress = uri;
-    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.TimeoutSeconds, 5, 120));
-});
-
-builder.Services.AddHttpClient<IAiCaptionService, AiCaptionClient>((sp, client) =>
-{
-    var options = sp.GetRequiredService<IOptions<AiServiceOptions>>().Value;
-    if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var uri))
-    {
-        throw new InvalidOperationException("AiService:BaseUrl is not a valid absolute URI.");
-    }
-
-    client.BaseAddress = uri;
-    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.TimeoutSeconds, 5, 120));
-});
+builder.Services.AddHttpClient("AiService.Health", ProgramSetup.ConfigureAiHttpClient);
+builder.Services.AddHttpClient<IAiCaptionService, AiCaptionClient>(ProgramSetup.ConfigureAiHttpClient);
 
 builder.Services.AddSingleton<IStripeClient>(sp =>
 {
@@ -229,39 +168,7 @@ var app = builder.Build();
 
 await DbInitializer.InitializeAsync(app.Services, app.Configuration, app.Logger);
 
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        var feature = context.Features.Get<IExceptionHandlerFeature>();
-        if (feature?.Error is not null)
-        {
-            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
-                .CreateLogger("GlobalException");
-            logger.LogError(feature.Error, "Unhandled exception");
-        }
-
-        var origin = context.Request.Headers["Origin"].ToString();
-        if (!string.IsNullOrWhiteSpace(origin) &&
-            allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
-        {
-            context.Response.Headers["Access-Control-Allow-Origin"] = origin;
-            context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
-        }
-
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        context.Response.ContentType = "application/problem+json";
-
-        var problem = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Internal Server Error",
-            Detail = "An unexpected error occurred. Please try again."
-        };
-
-        await context.Response.WriteAsJsonAsync(problem);
-    });
-});
+ProgramSetup.UseGlobalExceptionHandler(app, allowedOrigins);
 
 app.UseSwagger();
 app.UseSwaggerUI(opt =>
@@ -270,33 +177,14 @@ app.UseSwaggerUI(opt =>
     opt.RoutePrefix = "docs";
 });
 
-var urls = builder.Configuration["ASPNETCORE_URLS"];
-var httpsPort = builder.Configuration.GetValue<int?>("ASPNETCORE_HTTPS_PORT");
-var hasHttps = httpsPort.HasValue ||
-               (!string.IsNullOrWhiteSpace(urls) &&
-                urls.Contains("https://", StringComparison.OrdinalIgnoreCase));
-
-if (hasHttps)
-{
-    app.UseHttpsRedirection();
-}
+ProgramSetup.UseHttpsRedirectionIfConfigured(app, builder.Configuration);
 
 app.UseCors("wasm");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-var mediaOptions = app.Services.GetRequiredService<IOptions<MediaStorageOptions>>().Value;
-if (!string.Equals(mediaOptions.Provider, "AzureBlob", StringComparison.OrdinalIgnoreCase))
-{
-    var mediaRoot = Path.GetFullPath(mediaOptions.RootPath);
-    Directory.CreateDirectory(mediaRoot);
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(mediaRoot),
-        RequestPath = "/media"
-    });
-}
+ProgramSetup.UseLocalMediaFiles(app);
 
 app.MapControllers();
 app.MapHealthChecks("/health");
