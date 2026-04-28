@@ -140,6 +140,9 @@ jobs:
         shell: bash
         run: |
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          az group show \
+            --name "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            >/dev/null 2>&1 || \
           az group create \
             --name "${{ secrets.AZURE_RESOURCE_GROUP }}" \
             --location "${{ secrets.AZURE_LOCATION }}"
