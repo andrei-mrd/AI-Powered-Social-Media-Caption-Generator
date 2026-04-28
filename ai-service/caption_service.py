@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-from typing import Any, Dict, Iterable, List, Sequence, Tuple, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from openai import OpenAI, OpenAIError
 
@@ -50,9 +50,7 @@ class CaptionService:
             )
         logger.info("moderation:ok")
 
-    def _build_generation_messages(
-        self, req: GenerateCaptionRequest, temperature: float, media_cues: str | None
-    ) -> List[dict]:
+    def _build_generation_messages(self, req: GenerateCaptionRequest, media_cues: str | None) -> List[dict]:
         style = PLATFORM_STYLES.get(req.platform, "")
         instructions = (
             "You are an expert social media strategist. "
@@ -135,81 +133,94 @@ class CaptionService:
 
         return cleaned[:target]
 
-    def _parse_captions(
-        self, payload: Dict[str, Any], expected: int, hashtag_target: int
-    ) -> List[StructuredCaption]:
+    def _parse_caption_item(self, item: Any, hashtag_target: int) -> StructuredCaption | None:
+        if not isinstance(item, dict):
+            return None
+
+        text = str(item.get("text", "")).strip()
+        if not text:
+            return None
+
+        hook = item.get("hook")
+        cta = item.get("cta")
+        hashtags_raw = item.get("hashtags", []) or []
+        try:
+            hashtags_clean = self._clean_hashtags(hashtags_raw, hashtag_target)
+        except ValueError:
+            hashtags_clean = []
+
+        return StructuredCaption(
+            text=text,
+            hook=hook.strip() if isinstance(hook, str) and hook.strip() else None,
+            cta=cta.strip() if isinstance(cta, str) and cta.strip() else None,
+            hashtags=hashtags_clean,
+            score=None,
+            score_reason=None,
+        )
+
+    def _parse_captions(self, payload: Dict[str, Any], expected: int, hashtag_target: int) -> List[StructuredCaption]:
         captions_raw = payload.get("captions", [])
         if not isinstance(captions_raw, list):
             raise ValueError("Model response missing captions.")
 
         parsed: List[StructuredCaption] = []
         for item in captions_raw:
-            if not isinstance(item, dict):
-                continue
-            text = str(item.get("text", "")).strip()
-            if not text:
-                continue
-            hook = item.get("hook")
-            cta = item.get("cta")
-            hashtags_raw = item.get("hashtags", []) or []
-            try:
-                hashtags_clean = self._clean_hashtags(hashtags_raw, hashtag_target)
-            except ValueError:
-                hashtags_clean = []
-            parsed.append(
-                StructuredCaption(
-                    text=text,
-                    hook=hook.strip() if isinstance(hook, str) and hook.strip() else None,
-                    cta=cta.strip() if isinstance(cta, str) and cta.strip() else None,
-                    hashtags=hashtags_clean,
-                    score=None,
-                    score_reason=None,
-                )
-            )
+            caption = self._parse_caption_item(item, hashtag_target)
+            if caption is not None:
+                parsed.append(caption)
 
         filtered = [c for c in parsed if c.text]
         if len(filtered) < expected:
             raise ValueError("Model did not return enough captions. Please try again.")
         return filtered[:expected]
 
-    def _score_captions(
-        self, captions: List[StructuredCaption], req: GenerateCaptionRequest
-    ) -> Tuple[List[StructuredCaption], int]:
-        try:
-            scored: List[StructuredCaption] = []
-            for cap in captions:
-                score = 60
-                reasons: List[str] = []
-                if cap.hook:
-                    score += 10
-                    reasons.append("Hook present")
-                if req.include_cta and cap.cta:
-                    score += 10
-                    reasons.append("CTA included")
-                if req.keywords_to_include:
-                    matched = sum(
-                        1 for kw in req.keywords_to_include if kw.lower() in cap.text.lower()
-                    )
-                    if matched:
-                        score += min(10, matched * 3)
-                        reasons.append("Keywords covered")
-                    else:
-                        score -= 5
-                        reasons.append("Missing keywords")
-                if cap.hashtags:
-                    score += 5
-                    reasons.append("Hashtags added")
-                length = len(cap.text.split())
-                if req.caption_length == "short" and length > 30:
-                    score -= 5
-                    reasons.append("Too long for short")
-                if req.caption_length == "long" and length < 15:
-                    score -= 5
-                    reasons.append("Too short for long")
-                cap.score = max(0, min(100, score))
-                cap.score_reason = "; ".join(reasons) if reasons else "Baseline score"
-                scored.append(cap)
+    def _keyword_score_adjustment(self, text: str, keywords: List[str]) -> Tuple[int, str | None]:
+        if not keywords:
+            return 0, None
 
+        matched = sum(1 for keyword in keywords if keyword.lower() in text.lower())
+        if matched:
+            return min(10, matched * 3), "Keywords covered"
+
+        return -5, "Missing keywords"
+
+    def _length_score_adjustment(self, text: str, caption_length: str) -> Tuple[int, str | None]:
+        word_count = len(text.split())
+        if caption_length == "short" and word_count > 30:
+            return -5, "Too long for short"
+        if caption_length == "long" and word_count < 15:
+            return -5, "Too short for long"
+        return 0, None
+
+    def _score_caption(self, caption: StructuredCaption, req: GenerateCaptionRequest) -> StructuredCaption:
+        score = 60
+        reasons: List[str] = []
+
+        if caption.hook:
+            score += 10
+            reasons.append("Hook present")
+        if req.include_cta and caption.cta:
+            score += 10
+            reasons.append("CTA included")
+        if caption.hashtags:
+            score += 5
+            reasons.append("Hashtags added")
+
+        for adjustment, reason in (
+            self._keyword_score_adjustment(caption.text, req.keywords_to_include),
+            self._length_score_adjustment(caption.text, req.caption_length),
+        ):
+            score += adjustment
+            if reason:
+                reasons.append(reason)
+
+        caption.score = max(0, min(100, score))
+        caption.score_reason = "; ".join(reasons) if reasons else "Baseline score"
+        return caption
+
+    def _score_captions(self, captions: List[StructuredCaption], req: GenerateCaptionRequest) -> Tuple[List[StructuredCaption], int]:
+        try:
+            scored = [self._score_caption(caption, req) for caption in captions]
             best_idx = max(range(len(scored)), key=lambda i: scored[i].score or 0)
             return scored, best_idx
         except Exception as exc:
@@ -253,10 +264,10 @@ class CaptionService:
             return ""
 
     def _request_batch(
-        self, req: GenerateCaptionRequest, temperature: float, trace_id: Optional[str], media_cues: str | None
+        self, req: GenerateCaptionRequest, temperature: float, media_cues: str | None
     ) -> Tuple[List[StructuredCaption], int]:
         logger.info("generate:start temp=%s", temperature)
-        messages = self._build_generation_messages(req, temperature, media_cues)
+        messages = self._build_generation_messages(req, media_cues)
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -285,7 +296,7 @@ class CaptionService:
         last_error: Exception | None = None
         for temperature in (0.85, 0.45):
             try:
-                captions, best_idx = self._request_batch(req, temperature, trace_id, media_cues)
+                captions, best_idx = self._request_batch(req, temperature, media_cues)
                 logger.info("generate:success temp=%s trace_id=%s", temperature, trace_id or "n/a")
                 return captions, best_idx, self._last_media_cues
             except ValueError as exc:

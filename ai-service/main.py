@@ -58,7 +58,7 @@ def create_app() -> FastAPI:
             "model": get_service().model if api_key_present else None,
         }
 
-    @app.post("/generate-caption", response_model=GenerateCaptionResponse)
+    @app.post("/generate-caption")
     def generate_caption(
         payload: GenerateCaptionRequest,
         service: Annotated[CaptionService, Depends(get_service)],
@@ -101,7 +101,7 @@ def create_app() -> FastAPI:
             trace_id=request.state.trace_id,
         )
 
-    @app.post("/improve-caption", response_model=ImproveCaptionResponse)
+    @app.post("/improve-caption")
     def improve_caption(
         payload: ImproveCaptionRequest,
         service: Annotated[CaptionService, Depends(get_service)],
