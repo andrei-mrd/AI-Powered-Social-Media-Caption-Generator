@@ -4,7 +4,7 @@ FROM node:24-alpine AS build
 WORKDIR /app
 
 COPY src/frontend/package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY src/frontend/ ./
 ARG VITE_STRIPE_PUBLISHABLE_KEY=""

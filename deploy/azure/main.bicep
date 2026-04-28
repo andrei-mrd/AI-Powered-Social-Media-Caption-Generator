@@ -68,11 +68,11 @@ var mediaContainerName = 'captiongen-media'
 var apiAppName = '${projectName}-api'
 var aiAppName = '${projectName}-ai'
 var frontendAppName = '${projectName}-frontend'
+var containerPullIdentityName = '${projectName}-acr-pull'
 var appDomain = managedEnvironment.properties.defaultDomain
 var apiOrigin = 'https://${apiAppName}.${appDomain}'
 var aiOrigin = 'https://${aiAppName}.${appDomain}'
 var frontendOrigin = 'https://${frontendAppName}.${appDomain}'
-var acrPassword = listCredentials(acr.id, '2023-07-01').passwords[0].value
 var storageKey = listKeys(storage.id, '2023-01-01').keys[0].value
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storageKey};EndpointSuffix=${environment().suffixes.storage}'
 var mediaPublicBaseUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/${mediaContainerName}'
@@ -85,7 +85,22 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     name: 'Basic'
   }
   properties: {
-    adminUserEnabled: true
+    adminUserEnabled: false
+  }
+}
+
+resource containerPullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: containerPullIdentityName
+  location: location
+}
+
+resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acr.id, containerPullIdentity.id, 'AcrPull')
+  scope: acr
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+    principalId: containerPullIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -190,6 +205,12 @@ resource mediaContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
 resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: aiAppName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${containerPullIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {
@@ -202,15 +223,10 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: acr.properties.loginServer
-          username: acr.name
-          passwordSecretRef: 'acr-password'
+          identity: containerPullIdentity.id
         }
       ]
       secrets: [
-        {
-          name: 'acr-password'
-          value: acrPassword
-        }
         {
           name: 'openai-api-key'
           value: openAiApiKey
@@ -240,11 +256,20 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    acrPullAssignment
+  ]
 }
 
 resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: apiAppName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${containerPullIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {
@@ -257,15 +282,10 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: acr.properties.loginServer
-          username: acr.name
-          passwordSecretRef: 'acr-password'
+          identity: containerPullIdentity.id
         }
       ]
       secrets: [
-        {
-          name: 'acr-password'
-          value: acrPassword
-        }
         {
           name: 'db-connection-string'
           value: dbConnectionString
@@ -426,6 +446,12 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
 resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: frontendAppName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${containerPullIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {
@@ -438,14 +464,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: acr.properties.loginServer
-          username: acr.name
-          passwordSecretRef: 'acr-password'
-        }
-      ]
-      secrets: [
-        {
-          name: 'acr-password'
-          value: acrPassword
+          identity: containerPullIdentity.id
         }
       ]
     }

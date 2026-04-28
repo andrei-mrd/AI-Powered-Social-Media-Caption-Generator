@@ -100,7 +100,7 @@ jobs:
 
       - name: Python dependencies
         working-directory: ai-service
-        run: pip install -r requirements.txt
+        run: pip install --only-binary=:all: -r requirements.txt
 
       - name: Python tests with coverage
         working-directory: ai-service
@@ -109,7 +109,7 @@ jobs:
       - name: React frontend build
         working-directory: src/frontend
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm run lint
           npm run build
 
@@ -150,7 +150,7 @@ jobs:
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
             --location "${{ secrets.AZURE_LOCATION }}" \
             --sku Basic \
-            --admin-enabled true
+            --admin-enabled false
 
       - name: ACR login
         run: az acr login --name "${{ secrets.AZURE_ACR_NAME }}"

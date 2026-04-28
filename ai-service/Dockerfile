@@ -11,7 +11,8 @@ WORKDIR /app
 RUN useradd --create-home --shell /usr/sbin/nologin captiongen
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --only-binary=:all: -r requirements.txt
 
 COPY . .
 
