@@ -116,6 +116,9 @@ jobs:
       - name: Sonar quality gate
         if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         uses: SonarSource/sonarqube-quality-gate-action@v1
+        with:
+          scanMetadataReportFile: .sonarqube/out/.sonar/report-task.txt
+          pollingTimeoutSec: 300
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
