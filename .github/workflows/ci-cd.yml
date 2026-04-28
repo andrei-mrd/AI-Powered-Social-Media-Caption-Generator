@@ -100,7 +100,7 @@ jobs:
 
       - name: Python dependencies
         working-directory: ai-service
-        run: pip install --only-binary=:all: -r requirements.txt
+        run: "pip install --only-binary=:all: -r requirements.txt"
 
       - name: Python tests with coverage
         working-directory: ai-service
