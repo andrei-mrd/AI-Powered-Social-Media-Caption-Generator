@@ -1,25 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AuthContext, type User } from './auth-context';
 
-interface User {
-  id: string;
-  email: string;
-}
-
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  logout: () => Promise<void>;
-  refresh: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  isLoading: true,
-  logout: async () => {},
-  refresh: async () => {},
-});
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,5 +36,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);

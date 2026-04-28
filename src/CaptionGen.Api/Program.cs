@@ -84,7 +84,17 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
-builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
+if (string.Equals(
+        builder.Configuration["MediaStorage:Provider"],
+        "AzureBlob",
+        StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IMediaStorageService, AzureBlobMediaStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
+}
 builder.Services.AddHostedService<ScheduledPostWorker>();
 builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 builder.Services.AddScoped<IUsageService, UsageService>();
@@ -277,13 +287,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 var mediaOptions = app.Services.GetRequiredService<IOptions<MediaStorageOptions>>().Value;
-var mediaRoot = Path.GetFullPath(mediaOptions.RootPath);
-Directory.CreateDirectory(mediaRoot);
-app.UseStaticFiles(new StaticFileOptions
+if (!string.Equals(mediaOptions.Provider, "AzureBlob", StringComparison.OrdinalIgnoreCase))
 {
-    FileProvider = new PhysicalFileProvider(mediaRoot),
-    RequestPath = "/media"
-});
+    var mediaRoot = Path.GetFullPath(mediaOptions.RootPath);
+    Directory.CreateDirectory(mediaRoot);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaRoot),
+        RequestPath = "/media"
+    });
+}
 
 app.MapControllers();
 app.MapHealthChecks("/health");

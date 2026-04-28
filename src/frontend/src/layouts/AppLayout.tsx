@@ -1,10 +1,10 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { LayoutDashboard, LogOut, ChevronRight, History, PenTool, Settings } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import './AppLayout.css';
 
-const sidebarVariants = {
+const sidebarVariants: Variants = {
   hidden: { x: -20, opacity: 0 },
   visible: { 
     x: 0, 
@@ -17,7 +17,7 @@ const sidebarVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { x: -10, opacity: 0 },
   visible: { x: 0, opacity: 1 }
 };

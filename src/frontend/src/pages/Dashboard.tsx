@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { PenTool, Target, Hash, Zap, Sparkles, ShieldCheck, Activity, RefreshCw, CheckCircle, ChevronRight } from 'lucide-react';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { normalizeError } from '../utils/api';
 import { startStripeCheckout } from '../payments/checkout';
 import './Dashboard.css';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -15,7 +15,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
 };

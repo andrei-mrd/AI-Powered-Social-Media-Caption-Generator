@@ -4,7 +4,32 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <EnableDefaultRazorGenerateItems>false</EnableDefaultRazorGenerateItems>
+    <EnableDefaultRazorComponentItems>false</EnableDefaultRazorComponentItems>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Contracts/Captions/ImproveCaptionRequestDto.cs" />
+    <Compile Include="Contracts/Payments/CreateCheckoutSessionRequest.cs" />
+    <Compile Include="Contracts/Posts/CreatePostRequest.cs" />
+    <Compile Include="Contracts/Posts/SchedulePostRequest.cs" />
+    <Compile Include="Controllers/AuthController.cs" />
+    <Compile Include="Controllers/CaptionsController.cs" />
+    <Compile Include="Controllers/EntitlementsController.cs" />
+    <Compile Include="Controllers/MediaController.cs" />
+    <Compile Include="Controllers/PaymentsController.cs" />
+    <Compile Include="Controllers/PostsController.cs" />
+    <Compile Include="Controllers/SocialController.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />

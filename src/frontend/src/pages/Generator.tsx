@@ -15,13 +15,24 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
+interface CaptionVariant {
+  text: string;
+  hashtags: string[];
+}
+
+interface GenerateResult {
+  id: string;
+  captions: CaptionVariant[];
+  hashtags: string[];
+}
+
 export default function Generator() {
   const [topic, setTopic] = useState('');
   const [platform, setPlatform] = useState('instagram');
   const [tone, setTone] = useState('professional');
   const [length, setLength] = useState('medium');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<GenerateResult | null>(null);
   const [error, setError] = useState('');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [savedIndex, setSavedIndex] = useState<number | null>(null);
@@ -65,7 +76,7 @@ export default function Generator() {
         throw new Error(message);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as GenerateResult;
       setResult(data);
       setSelectedIndex(data?.captions?.length ? 0 : null);
       setSavedIndex(null);
@@ -227,7 +238,7 @@ export default function Generator() {
               <div className="results-header">
                 <div className="results-title">
                   <h2>Generated Options</h2>
-                  <span className="badge badge-subtle">{result.platform}</span>
+                  <span className="badge badge-subtle">{platform}</span>
                 </div>
                 <button
                   type="button"
@@ -241,7 +252,7 @@ export default function Generator() {
               </div>
 
               <div className="options-list">
-                {result.captions.map((cap: string, i: number) => (
+                {result.captions.map((cap, i) => (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -261,14 +272,14 @@ export default function Generator() {
                         <button
                           type="button"
                           className="copy-btn" 
-                          onClick={(e) => { e.stopPropagation(); copyToClipboard(cap, i); }}
+                          onClick={(e) => { e.stopPropagation(); copyToClipboard(cap.text, i); }}
                         >
                           {copiedIndex === i ? <CheckCircle2 size={16} className="text-green-500" /> : <Copy size={16} />}
                         </button>
                       </div>
                     </div>
                     <div className="card-body">
-                      {cap}
+                      {cap.text}
                     </div>
                   </motion.div>
                 ))}

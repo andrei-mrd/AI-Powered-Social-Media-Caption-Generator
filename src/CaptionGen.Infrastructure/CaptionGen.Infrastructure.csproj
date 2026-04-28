@@ -1,11 +1,66 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\CaptionGen.Application\CaptionGen.Application.csproj" />
     <ProjectReference Include="..\CaptionGen.Domain\CaptionGen.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Auth/BcryptPasswordHasher.cs" />
+    <Compile Include="Auth/JwtOptions.cs" />
+    <Compile Include="Auth/JwtTokenService.cs" />
+    <Compile Include="Captions/AiCaptionClient.cs" />
+    <Compile Include="Captions/AiServiceHealthCheck.cs" />
+    <Compile Include="Captions/AiServiceOptions.cs" />
+    <Compile Include="Common/ContentPolicy.cs" />
+    <Compile Include="Common/TimezoneService.cs" />
+    <Compile Include="Entitlements/EntitlementService.cs" />
+    <Compile Include="Entitlements/UsageService.cs" />
+    <Compile Include="Media/AzureBlobMediaStorageService.cs" />
+    <Compile Include="Media/LocalMediaStorageService.cs" />
+    <Compile Include="Media/MediaAssetRepository.cs" />
+    <Compile Include="Media/MediaStorageOptions.cs" />
+    <Compile Include="Payments/StripeOptions.cs" />
+    <Compile Include="Payments/StripePaymentService.cs" />
+    <Compile Include="Payments/StripeWebhookService.cs" />
+    <Compile Include="Persistence/AppDbContext.cs" />
+    <Compile Include="Persistence/DbInitializer.cs" />
+    <Compile Include="Persistence/Migrations/20260224190749_Init.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260224190749_Init.cs" />
+    <Compile Include="Persistence/Migrations/20260303105930_AddPostsMediaCaptions.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260303105930_AddPostsMediaCaptions.cs" />
+    <Compile Include="Persistence/Migrations/20260316133202_AddAiCaptionMetadata.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260316133202_AddAiCaptionMetadata.cs" />
+    <Compile Include="Persistence/Migrations/20260316133913_AddAiCaptionMetadata2.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260316133913_AddAiCaptionMetadata2.cs" />
+    <Compile Include="Persistence/Migrations/20260323120000_AddEntitlements.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260323120000_AddEntitlements.cs" />
+    <Compile Include="Persistence/Migrations/20260323124500_AddUsage.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260323124500_AddUsage.cs" />
+    <Compile Include="Persistence/Migrations/20260420192858_AddSocialAccounts.Designer.cs" />
+    <Compile Include="Persistence/Migrations/20260420192858_AddSocialAccounts.cs" />
+    <Compile Include="Persistence/Migrations/AppDbContextModelSnapshot.cs" />
+    <Compile Include="Posts/PostRepository.cs" />
+    <Compile Include="Posts/ScheduledPostWorker.cs" />
+    <Compile Include="Social/AesTokenEncryptionService.cs" />
+    <Compile Include="Social/LinkedInOAuthService.cs" />
+    <Compile Include="Social/LinkedInOptions.cs" />
+    <Compile Include="Social/LinkedInPublisher.cs" />
+    <Compile Include="Social/SocialAccountRepository.cs" />
+    <Compile Include="Social/TokenEncryptionOptions.cs" />
+    <Compile Include="Users/UserRepository.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
@@ -18,11 +73,5 @@
     <PackageReference Include="Stripe.net" Version="51.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 </Project>

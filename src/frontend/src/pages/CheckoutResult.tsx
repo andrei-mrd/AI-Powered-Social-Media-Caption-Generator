@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Loader } from 'lucide-react';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -17,7 +17,7 @@ export default function CheckoutResult() {
   const isSuccess = variant === 'success';
 
   // The plan slug stored in sessionStorage before the Stripe redirect.
-  const pendingSlugRef = useRef(sessionStorage.getItem('pendingPlanSlug') ?? '');
+  const [pendingSlug] = useState(() => sessionStorage.getItem('pendingPlanSlug') ?? '');
 
   // Poll every 3 s on success so we catch the plan update as soon as the
   // Stripe webhook fires and AssignPlanAsync updates the database.
@@ -27,8 +27,8 @@ export default function CheckoutResult() {
   const planActivated =
     isSuccess &&
     !!entitlement &&
-    (!pendingSlugRef.current ||
-      entitlement.planSlug.toLowerCase() === pendingSlugRef.current.toLowerCase());
+    (!pendingSlug ||
+      entitlement.planSlug.toLowerCase() === pendingSlug.toLowerCase());
 
   // Clear sessionStorage once confirmed so a hard-refresh doesn't re-show it.
   useEffect(() => {

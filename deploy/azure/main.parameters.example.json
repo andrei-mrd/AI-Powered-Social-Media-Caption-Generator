@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectName": {
+      "value": "captiongen"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "containerRegistryName": {
+      "value": "captiongenacr123"
+    },
+    "apiImage": {
+      "value": "captiongen-api:latest"
+    },
+    "aiImage": {
+      "value": "captiongen-ai:latest"
+    },
+    "frontendImage": {
+      "value": "captiongen-frontend:latest"
+    }
+  }
+}
