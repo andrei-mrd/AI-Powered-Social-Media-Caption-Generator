@@ -63,6 +63,7 @@ jobs:
           /n:"CaptionGen"
           /d:sonar.host.url="${{ env.SONAR_HOST_URL }}"
           /d:sonar.token="${{ env.SONAR_TOKEN }}"
+          /d:sonar.qualitygate.wait=true
           /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml"
           /d:sonar.python.coverage.reportPaths="ai-service/coverage.xml"
           /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,src/CaptionGen.Frontend/**"
@@ -112,17 +113,6 @@ jobs:
       - name: Sonar end
         if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         run: dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
-
-      - name: Sonar quality gate
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        with:
-          scanMetadataReportFile: .sonarqube/out/.sonar/report-task.txt
-          pollingTimeoutSec: 300
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   docker-and-deploy:
     name: Build images and deploy Azure
