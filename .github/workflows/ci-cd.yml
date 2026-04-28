@@ -27,6 +27,7 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+      SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,18 +57,20 @@ jobs:
 
       - name: Sonar begin
         if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
-        run: >
-          dotnet sonarscanner begin
-          /k:"${{ env.PROJECT_KEY }}"
-          /o:"${{ env.SONAR_ORGANIZATION }}"
-          /n:"CaptionGen"
-          /d:sonar.host.url="${{ env.SONAR_HOST_URL }}"
-          /d:sonar.token="${{ env.SONAR_TOKEN }}"
-          /d:sonar.qualitygate.wait=true
-          /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml"
-          /d:sonar.python.coverage.reportPaths="ai-service/coverage.xml"
-          /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,src/CaptionGen.Frontend/**"
-          /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,src/frontend/**,src/CaptionGen.Frontend/**"
+        shell: bash
+        run: |
+          PROJECT_KEY="${SONAR_PROJECT_KEY:-${PROJECT_KEY}}"
+          dotnet sonarscanner begin \
+            /k:"${PROJECT_KEY}" \
+            /o:"${SONAR_ORGANIZATION}" \
+            /n:"CaptionGen" \
+            /d:sonar.host.url="${SONAR_HOST_URL}" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.qualitygate.wait=true \
+            /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
+            /d:sonar.python.coverage.reportPaths="ai-service/coverage.xml" \
+            /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,src/CaptionGen.Frontend/**" \
+            /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,src/frontend/**,src/CaptionGen.Frontend/**"
 
       - name: Restore .NET
         run: dotnet restore CaptionGen.sln
