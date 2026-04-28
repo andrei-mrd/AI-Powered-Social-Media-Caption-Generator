@@ -23,6 +23,7 @@ Set these repository secrets before running the workflow:
 - `OPENAI_API_KEY`
 - `SONAR_TOKEN`
 - `SONAR_HOST_URL`
+- `SONAR_ORGANIZATION`, your SonarCloud organization key.
 
 Optional secrets:
 

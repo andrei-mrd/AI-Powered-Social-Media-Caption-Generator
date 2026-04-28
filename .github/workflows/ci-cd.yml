@@ -26,6 +26,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,14 +51,15 @@ jobs:
           cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install SonarScanner
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Sonar begin
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         run: >
           dotnet sonarscanner begin
           /k:"${{ env.PROJECT_KEY }}"
+          /o:"${{ env.SONAR_ORGANIZATION }}"
           /n:"CaptionGen"
           /d:sonar.host.url="${{ env.SONAR_HOST_URL }}"
           /d:sonar.token="${{ env.SONAR_TOKEN }}"
@@ -108,11 +110,11 @@ jobs:
           npm run build
 
       - name: Sonar end
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         run: dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
 
       - name: Sonar quality gate
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' && env.SONAR_ORGANIZATION != '' }}
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
