@@ -285,7 +285,7 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           identity: containerPullIdentity.id
         }
       ]
-      secrets: [
+      secrets: concat([
         {
           name: 'db-connection-string'
           value: dbConnectionString
@@ -298,22 +298,24 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'storage-connection-string'
           value: storageConnectionString
         }
+      ], empty(stripeSecretKey) ? [] : [
         {
           name: 'stripe-secret-key'
           value: stripeSecretKey
         }
+      ], empty(stripeWebhookSecret) ? [] : [
         {
           name: 'stripe-webhook-secret'
           value: stripeWebhookSecret
         }
-      ]
+      ])
     }
     template: {
       containers: [
         {
           name: 'api'
           image: '${acr.properties.loginServer}/${apiImage}'
-          env: [
+          env: concat([
             {
               name: 'ASPNETCORE_ENVIRONMENT'
               value: 'Production'
@@ -387,16 +389,8 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: 'false'
             }
             {
-              name: 'Stripe__SecretKey'
-              secretRef: 'stripe-secret-key'
-            }
-            {
               name: 'Stripe__PublishableKey'
               value: stripePublishableKey
-            }
-            {
-              name: 'Stripe__WebhookSecret'
-              secretRef: 'stripe-webhook-secret'
             }
             {
               name: 'Stripe__SuccessUrl'
@@ -422,7 +416,17 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'Stripe__PriceIds__agency'
               value: stripeAgencyPriceId
             }
-          ]
+          ], empty(stripeSecretKey) ? [] : [
+            {
+              name: 'Stripe__SecretKey'
+              secretRef: 'stripe-secret-key'
+            }
+          ], empty(stripeWebhookSecret) ? [] : [
+            {
+              name: 'Stripe__WebhookSecret'
+              secretRef: 'stripe-webhook-secret'
+            }
+          ])
           resources: {
             cpu: json('0.75')
             memory: '1.5Gi'
