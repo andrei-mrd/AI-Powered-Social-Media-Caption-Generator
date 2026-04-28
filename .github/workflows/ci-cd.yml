@@ -212,8 +212,8 @@ jobs:
             postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
             jwtKey="${{ secrets.JWT_KEY }}" \
             openAiApiKey="${{ secrets.OPENAI_API_KEY }}" \
-            stripeSecretKey="${STRIPE_SECRET_KEY_VALUE:-not-configured}" \
-            stripeWebhookSecret="${STRIPE_WEBHOOK_SECRET_VALUE:-not-configured}" \
+            stripeSecretKey="${STRIPE_SECRET_KEY_VALUE:-}" \
+            stripeWebhookSecret="${STRIPE_WEBHOOK_SECRET_VALUE:-}" \
             stripePublishableKey="${STRIPE_PUBLISHABLE_KEY_VALUE:-}" \
             stripeBasicPriceId="${STRIPE_BASIC_PRICE_ID:-}" \
             stripeFreelancerPriceId="${STRIPE_FREELANCER_PRICE_ID:-}" \

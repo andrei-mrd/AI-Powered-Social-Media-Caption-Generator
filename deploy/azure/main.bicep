@@ -35,11 +35,11 @@ param openAiApiKey string
 
 @secure()
 @description('Optional Stripe secret key.')
-param stripeSecretKey string = 'not-configured'
+param stripeSecretKey string = ''
 
 @secure()
 @description('Optional Stripe webhook secret.')
-param stripeWebhookSecret string = 'not-configured'
+param stripeWebhookSecret string = ''
 
 @description('Stripe publishable key returned to the frontend when payments are enabled.')
 param stripePublishableKey string = ''
