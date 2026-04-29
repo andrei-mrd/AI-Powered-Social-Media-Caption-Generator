@@ -20,6 +20,7 @@ Set these repository secrets before running the workflow:
 - `AZURE_ACR_NAME`, globally unique, lowercase letters and numbers only.
 - `POSTGRES_ADMIN_PASSWORD`
 - `JWT_KEY`, at least 32 characters.
+- `TOKEN_ENCRYPTION_KEY`, a base64-encoded 32-byte key. Generate one with `openssl rand -base64 32`.
 - `OPENAI_API_KEY`
 - `SONAR_TOKEN`
 - `SONAR_HOST_URL`
@@ -69,7 +70,7 @@ az deployment group create \
   --template-file deploy/azure/main.bicep \
   --parameters projectName=captiongen containerRegistryName=captiongenacr123 \
   --parameters apiImage=captiongen-api:latest aiImage=captiongen-ai:latest frontendImage=captiongen-frontend:latest \
-  --parameters postgresAdminPassword='<strong-password>' jwtKey='<32-char-min-key>' openAiApiKey='<openai-key>'
+  --parameters postgresAdminPassword='<strong-password>' jwtKey='<32-char-min-key>' tokenEncryptionKey='<base64-32-byte-key>' openAiApiKey='<openai-key>'
 ```
 
 The deployment outputs the public frontend, API, AI, and media container URLs.

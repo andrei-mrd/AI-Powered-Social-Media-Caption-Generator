@@ -216,6 +216,7 @@ jobs:
             frontendImage="captiongen-frontend:${{ github.sha }}" \
             postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
             jwtKey="${{ secrets.JWT_KEY }}" \
+            tokenEncryptionKey="${{ secrets.TOKEN_ENCRYPTION_KEY }}" \
             openAiApiKey="${{ secrets.OPENAI_API_KEY }}" \
             stripeSecretKey="${STRIPE_SECRET_KEY_VALUE:-}" \
             stripeWebhookSecret="${STRIPE_WEBHOOK_SECRET_VALUE:-}" \

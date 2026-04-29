@@ -30,6 +30,10 @@ param postgresAdminPassword string
 param jwtKey string
 
 @secure()
+@description('Base64-encoded 32-byte key used to encrypt stored OAuth tokens.')
+param tokenEncryptionKey string
+
+@secure()
 @description('OpenAI API key used by the Python AI service.')
 param openAiApiKey string
 
@@ -295,6 +299,10 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           value: jwtKey
         }
         {
+          name: 'token-encryption-key'
+          value: tokenEncryptionKey
+        }
+        {
           name: 'storage-connection-string'
           value: storageConnectionString
         }
@@ -375,6 +383,10 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'Jwt__Key'
               secretRef: 'jwt-key'
+            }
+            {
+              name: 'TokenEncryption__Key'
+              secretRef: 'token-encryption-key'
             }
             {
               name: 'Jwt__AccessMinutes'
