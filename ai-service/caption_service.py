@@ -38,7 +38,7 @@ class CaptionService:
                 input=description,
             )
         except OpenAIError as exc:
-            logger.error("moderation:error %s", exc)
+            logger.exception("moderation:error")
             raise ValueError("Safety check failed. Please try again.") from exc
 
         result = moderation.results[0]
@@ -223,8 +223,8 @@ class CaptionService:
             scored = [self._score_caption(caption, req) for caption in captions]
             best_idx = max(range(len(scored)), key=lambda i: scored[i].score or 0)
             return scored, best_idx
-        except Exception as exc:
-            logger.error("scoring:error %s", exc)
+        except Exception:
+            logger.exception("scoring:error")
             return captions, 0
 
     def _extract_media_cues(self, media_urls: Sequence[str], trace_id: Optional[str]) -> str:
@@ -321,7 +321,7 @@ class CaptionService:
                 response_format={"type": "json_object"},
             )
         except OpenAIError as exc:
-            logger.error("improve:error %s", exc)
+            logger.exception("improve:error")
             raise ValueError("Caption improve failed.") from exc
 
         content = response.choices[0].message.content

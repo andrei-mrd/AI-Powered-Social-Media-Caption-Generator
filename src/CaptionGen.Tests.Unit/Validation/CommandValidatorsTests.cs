@@ -10,25 +10,30 @@ namespace CaptionGen.Tests.Unit.Validation;
 
 public sealed class CommandValidatorsTests
 {
+    private static readonly string[] AllowedPlatforms = ["instagram", "tiktok", "linkedin"];
+    private static readonly string[] AllowedTones = ["funny", "professional", "casual"];
+    private static readonly string[] AllowedGoals = ["reach", "engagement", "sales"];
+    private static readonly string[] AllowedCaptionLengths = ["short", "medium", "long"];
+
     private static IContentPolicy BuildPolicy()
     {
         var policy = new Mock<IContentPolicy>(MockBehavior.Strict);
-        policy.Setup(p => p.AllowedPlatforms).Returns(new[] { "instagram", "tiktok", "linkedin" });
-        policy.Setup(p => p.AllowedTones).Returns(new[] { "funny", "professional", "casual" });
-        policy.Setup(p => p.AllowedGoals).Returns(new[] { "reach", "engagement", "sales" });
-        policy.Setup(p => p.AllowedCaptionLengths).Returns(new[] { "short", "medium", "long" });
+        policy.Setup(p => p.AllowedPlatforms).Returns(AllowedPlatforms);
+        policy.Setup(p => p.AllowedTones).Returns(AllowedTones);
+        policy.Setup(p => p.AllowedGoals).Returns(AllowedGoals);
+        policy.Setup(p => p.AllowedCaptionLengths).Returns(AllowedCaptionLengths);
         policy.Setup(p => p.MinCaptionCount).Returns(1);
         policy.Setup(p => p.MaxCaptionCount).Returns(10);
         policy.Setup(p => p.MinHashtags).Returns(1);
         policy.Setup(p => p.MaxHashtags).Returns(30);
         policy.Setup(p => p.IsSupportedPlatform(It.IsAny<string>()))
-            .Returns<string>(v => new[] { "instagram", "tiktok", "linkedin" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+            .Returns<string>(v => AllowedPlatforms.Contains(v, StringComparer.OrdinalIgnoreCase));
         policy.Setup(p => p.IsSupportedTone(It.IsAny<string>()))
-            .Returns<string>(v => new[] { "funny", "professional", "casual" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+            .Returns<string>(v => AllowedTones.Contains(v, StringComparer.OrdinalIgnoreCase));
         policy.Setup(p => p.IsSupportedGoal(It.IsAny<string>()))
-            .Returns<string>(v => new[] { "reach", "engagement", "sales" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+            .Returns<string>(v => AllowedGoals.Contains(v, StringComparer.OrdinalIgnoreCase));
         policy.Setup(p => p.IsSupportedCaptionLength(It.IsAny<string>()))
-            .Returns<string>(v => new[] { "short", "medium", "long" }.Contains(v, StringComparer.OrdinalIgnoreCase));
+            .Returns<string>(v => AllowedCaptionLengths.Contains(v, StringComparer.OrdinalIgnoreCase));
         return policy.Object;
     }
 

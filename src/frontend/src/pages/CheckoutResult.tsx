@@ -40,18 +40,43 @@ export default function CheckoutResult() {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
     if (!isSuccess || planActivated) return;
-    const id = window.setTimeout(() => setTimedOut(true), 60_000);
-    return () => window.clearTimeout(id);
+    const id = globalThis.setTimeout(() => setTimedOut(true), 60_000);
+    return () => globalThis.clearTimeout(id);
   }, [isSuccess, planActivated]);
 
   const title = isSuccess ? 'Payment confirmed' : 'Payment canceled';
-  const subtitle = isSuccess
-    ? planActivated
-      ? 'Your plan is now active. Head to the dashboard to start creating.'
-      : timedOut
-        ? 'Taking longer than expected — your plan will update automatically once confirmed.'
-        : 'Activating your plan — this usually takes a few seconds…'
-    : 'No charges were made. You can retry checkout anytime.';
+  let subtitle = 'No charges were made. You can retry checkout anytime.';
+  if (isSuccess && planActivated) {
+    subtitle = 'Your plan is now active. Head to the dashboard to start creating.';
+  } else if (isSuccess && timedOut) {
+    subtitle = 'Taking longer than expected — your plan will update automatically once confirmed.';
+  } else if (isSuccess) {
+    subtitle = 'Activating your plan — this usually takes a few seconds…';
+  }
+
+  let planConfirmation = null;
+  if (planActivated && entitlement) {
+    planConfirmation = (
+      <div className="plan-confirmed">
+        <ShieldCheck size={20} className="plan-confirmed-icon" />
+        <div>
+          <strong>{entitlement.planName}</strong>
+          <span>
+            {entitlement.captionGenerationsPerMonth} captions/mo
+            &nbsp;·&nbsp;
+            {entitlement.mediaAssetsLimit} media assets
+          </span>
+        </div>
+      </div>
+    );
+  } else if (!timedOut && loading) {
+    planConfirmation = (
+      <div className="plan-pending">
+        <Loader size={16} className="spin" />
+        <span>Waiting for plan confirmation…</span>
+      </div>
+    );
+  }
 
   const handleGoToDashboard = () => {
     navigate('/dashboard', { state: { planJustUpdated: planActivated } });
@@ -67,24 +92,7 @@ export default function CheckoutResult() {
 
         {isSuccess && (
           <div className="plan-confirmation">
-            {planActivated ? (
-              <div className="plan-confirmed">
-                <ShieldCheck size={20} className="plan-confirmed-icon" />
-                <div>
-                  <strong>{entitlement!.planName}</strong>
-                  <span>
-                    {entitlement!.captionGenerationsPerMonth} captions/mo
-                    &nbsp;·&nbsp;
-                    {entitlement!.mediaAssetsLimit} media assets
-                  </span>
-                </div>
-              </div>
-            ) : !timedOut && loading ? (
-              <div className="plan-pending">
-                <Loader size={16} className="spin" />
-                <span>Waiting for plan confirmation…</span>
-              </div>
-            ) : null}
+            {planConfirmation}
           </div>
         )}
 

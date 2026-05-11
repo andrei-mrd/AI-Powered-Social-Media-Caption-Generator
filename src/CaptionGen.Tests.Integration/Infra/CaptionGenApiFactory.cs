@@ -106,6 +106,8 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
 
     private sealed class FakeAiCaptionService : IAiCaptionService
     {
+        private static readonly string[] ResultHashtags = ["#test"];
+
         public Task<CaptionGenerationResult> GenerateAsync(
             string description,
             string platform,
@@ -124,7 +126,7 @@ public sealed class CaptionGenApiFactory : WebApplicationFactory<Program>, IAsyn
                 .ToArray();
 
             return Task.FromResult<CaptionGenerationResult>(
-                new CaptionGenerationResult(captions, new[] { "#test" }, 80, "ok", Guid.NewGuid().ToString("N")));
+                new CaptionGenerationResult(captions, ResultHashtags, 80, "ok", Guid.NewGuid().ToString("N")));
         }
 
         public Task<CaptionImprovementResult> ImproveAsync(

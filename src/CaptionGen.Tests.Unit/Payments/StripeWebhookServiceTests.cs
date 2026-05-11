@@ -174,7 +174,7 @@ public sealed class StripeWebhookServiceTests
         var signedPayload = $"{timestamp}.{payload}";
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signedPayload));
-        var signature = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        var signature = Convert.ToHexStringLower(hash);
         return $"t={timestamp},v1={signature}";
     }
 }

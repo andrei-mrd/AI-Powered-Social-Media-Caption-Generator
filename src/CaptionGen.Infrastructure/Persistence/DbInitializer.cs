@@ -180,12 +180,9 @@ public static class DbInitializer
                 .Where(e => e.PlanId == freePlan.Id)
                 .ExecuteUpdateAsync(u => u.SetProperty(x => x.PlanId, basicPlan.Id), ct);
 
-            if (updated > 0)
+            if (updated > 0 && logger.IsEnabled(LogLevel.Information))
             {
-                if (logger.IsEnabled(LogLevel.Information))
-                {
-                    logger.LogInformation("Updated {Count} user entitlements from free to basic.", updated);
-                }
+                logger.LogInformation("Updated {Count} user entitlements from free to basic.", updated);
             }
         }
     }

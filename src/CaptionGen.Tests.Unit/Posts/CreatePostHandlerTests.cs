@@ -9,6 +9,9 @@ namespace CaptionGen.Tests.Unit.Posts;
 
 public sealed class CreatePostHandlerTests
 {
+    private static readonly string[] FirstCaptionHashtags = ["#a", "#b"];
+    private static readonly string[] SecondCaptionHashtags = ["#c", "#d"];
+
     [Fact]
     public async Task Handle_WithValidRequest_ShouldCallAi_AndPersistPost()
     {
@@ -28,10 +31,10 @@ public sealed class CreatePostHandlerTests
             .ReturnsAsync(new CaptionGenerationResult(
                 new[]
                 {
-                    new GeneratedCaption("c1", new[] { "#a", "#b" }, "hook1", "cta1", 90),
-                    new GeneratedCaption("c2", new[] { "#c", "#d" }, "hook2", "cta2", 85)
+                    new GeneratedCaption("c1", FirstCaptionHashtags, "hook1", "cta1", 90),
+                    new GeneratedCaption("c2", SecondCaptionHashtags, "hook2", "cta2", 85)
                 },
-                new[] { "#a", "#b" },
+                FirstCaptionHashtags,
                 88,
                 "reason",
                 "trace-1"));
@@ -55,7 +58,7 @@ public sealed class CreatePostHandlerTests
             CancellationToken.None);
 
         response.Captions.Select(c => c.Text).Should().ContainInOrder("c1", "c2");
-        response.Captions.First().Hashtags.Should().ContainInOrder("#a", "#b");
+        response.Captions[0].Hashtags.Should().ContainInOrder("#a", "#b");
         response.Hashtags.Should().ContainInOrder("#a", "#b");
         response.TraceId.Should().Be("trace-1");
         response.Id.Should().NotBeEmpty();
