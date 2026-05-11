@@ -67,7 +67,7 @@ public sealed class PaymentsController : ControllerBase
         }
 
         using var reader = new StreamReader(Request.Body);
-        var payload = await reader.ReadToEndAsync();
+        var payload = await reader.ReadToEndAsync(ct);
 
         try
         {

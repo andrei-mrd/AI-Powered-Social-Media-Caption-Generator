@@ -7,13 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
+namespace CaptionGen.Api;
+
 public static class ProgramSetup
 {
     private const string AzureBlobProvider = "AzureBlob";
 
     public static void LoadEnvFiles()
     {
-        var assemblyDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+        var assemblyDirectory = Path.GetDirectoryName(typeof(global::Program).Assembly.Location);
         if (string.IsNullOrWhiteSpace(assemblyDirectory))
         {
             return;
@@ -147,14 +149,14 @@ public static class ProgramSetup
 
     private static void AddCorsHeadersForKnownOrigin(HttpContext context, string[] allowedOrigins)
     {
-        var origin = context.Request.Headers["Origin"].ToString();
+        var origin = context.Request.Headers.Origin.ToString();
         if (string.IsNullOrWhiteSpace(origin) ||
             !allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
         {
             return;
         }
 
-        context.Response.Headers["Access-Control-Allow-Origin"] = origin;
-        context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+        context.Response.Headers.AccessControlAllowOrigin = origin;
+        context.Response.Headers.AccessControlAllowCredentials = "true";
     }
 }

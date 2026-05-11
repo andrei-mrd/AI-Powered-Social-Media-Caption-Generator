@@ -1,4 +1,5 @@
 using System.Text;
+using CaptionGen.Api;
 using CaptionGen.Application.Auth;
 using CaptionGen.Application.Captions;
 using CaptionGen.Application.Common.Policies;
@@ -189,6 +190,4 @@ ProgramSetup.UseLocalMediaFiles(app);
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-app.Run();
-
-public partial class Program;
+await app.RunAsync();
