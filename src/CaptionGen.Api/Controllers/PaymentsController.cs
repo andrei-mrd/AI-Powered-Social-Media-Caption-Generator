@@ -5,7 +5,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace CaptionGen.Api.Controllers;
 
@@ -58,9 +57,11 @@ public sealed class PaymentsController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("webhook")]
-    public async Task<IActionResult> Webhook(CancellationToken ct)
+    public async Task<IActionResult> Webhook(
+        [FromHeader(Name = "Stripe-Signature")] string? signature,
+        CancellationToken ct)
     {
-        if (!Request.Headers.TryGetValue("Stripe-Signature", out StringValues signature))
+        if (string.IsNullOrWhiteSpace(signature))
         {
             return BadRequest("Missing Stripe-Signature header.");
         }
@@ -95,7 +96,7 @@ public sealed class PaymentsController : ControllerBase
             Detail = detail
         };
 
-    private IActionResult BuildValidationProblem(ValidationException ex)
+    private ActionResult BuildValidationProblem(ValidationException ex)
     {
         var errors = ex.Errors
             .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)

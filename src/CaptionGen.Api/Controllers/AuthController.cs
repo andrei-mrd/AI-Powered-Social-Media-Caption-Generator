@@ -70,14 +70,16 @@ public sealed class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("logout")]
+    [ProducesResponseType<LogoutResponse>(StatusCodes.Status200OK)]
     public IActionResult Logout()
     {
         Response.Cookies.Delete(_jwtOptions.CookieName, BuildCookieOptions());
-        return Ok(new { ok = true });
+        return Ok(new LogoutResponse(true));
     }
 
     [Authorize]
     [HttpGet("me")]
+    [ProducesResponseType<MeResponse>(StatusCodes.Status200OK)]
     public IActionResult Me()
     {
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -113,3 +115,5 @@ public sealed class AuthController : ControllerBase
         return options;
     }
 }
+
+public sealed record LogoutResponse(bool Ok);

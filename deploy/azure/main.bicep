@@ -209,15 +209,15 @@ resource mediaContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
 resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: aiAppName
   location: location
-  dependsOn: [
-    acrPullAssignment
-  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${containerPullIdentity.id}': {}
     }
   }
+  dependsOn: [
+    acrPullAssignment
+  ]
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {
@@ -268,18 +268,18 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
 resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: apiAppName
   location: location
-  dependsOn: [
-    database
-    mediaContainer
-    aiApp
-    postgresAllowAzure
-  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${containerPullIdentity.id}': {}
     }
   }
+  dependsOn: [
+    database
+    mediaContainer
+    aiApp
+    postgresAllowAzure
+  ]
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {
@@ -462,15 +462,15 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
 resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: frontendAppName
   location: location
-  dependsOn: [
-    apiApp
-  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${containerPullIdentity.id}': {}
     }
   }
+  dependsOn: [
+    apiApp
+  ]
   properties: {
     managedEnvironmentId: managedEnvironment.id
     configuration: {

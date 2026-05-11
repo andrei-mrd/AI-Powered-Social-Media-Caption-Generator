@@ -155,7 +155,7 @@ public sealed class PostsController : ControllerBase
             Detail = detail
         };
 
-    private IActionResult BuildValidationProblem(ValidationException ex)
+    private ActionResult BuildValidationProblem(ValidationException ex)
     {
         var errors = ex.Errors
             .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)

@@ -83,14 +83,13 @@ public sealed class MediaController : ControllerBase
     /// Local placeholder for presigned uploads; returns the existing upload endpoint and expiry.
     /// </summary>
     [HttpPost("presign")]
+    [ProducesResponseType<PresignMediaUploadResponse>(StatusCodes.Status200OK)]
     public IActionResult Presign()
     {
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
-        return Ok(new
-        {
-            uploadUrl = Url.ActionLink(nameof(Upload), values: new { controller = "Media" }),
-            expiresAt
-        });
+        return Ok(new PresignMediaUploadResponse(
+            Url.ActionLink(nameof(Upload), values: new { controller = "Media" }),
+            expiresAt));
     }
 
     private Guid? GetUserId()
@@ -109,7 +108,7 @@ public sealed class MediaController : ControllerBase
             Detail = detail
         };
 
-    private IActionResult BuildValidationProblem(ValidationException ex)
+    private ActionResult BuildValidationProblem(ValidationException ex)
     {
         var errors = ex.Errors
             .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "General" : e.PropertyName)
@@ -126,3 +125,5 @@ public sealed class MediaController : ControllerBase
         return ValidationProblem(problem);
     }
 }
+
+public sealed record PresignMediaUploadResponse(string? UploadUrl, DateTimeOffset ExpiresAt);
