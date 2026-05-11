@@ -6,9 +6,9 @@ SONAR_HOST="${SONAR_HOST:-http://localhost:9000}"
 PROJECT_KEY="CaptionGen"
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then
-  echo "Error: SONAR_TOKEN is not set."
-  echo "Generate a token at $SONAR_HOST/account/security and run:"
-  echo "  SONAR_TOKEN=<your-token> ./scripts/sonar-scan.sh"
+  echo "Error: SONAR_TOKEN is not set." >&2
+  echo "Generate a token at $SONAR_HOST/account/security and run:" >&2
+  echo "  SONAR_TOKEN=<your-token> ./scripts/sonar-scan.sh" >&2
   exit 1
 fi
 

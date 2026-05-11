@@ -99,8 +99,8 @@ resource containerPullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities
 }
 
 resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acr.id, containerPullIdentity.id, 'AcrPull')
   scope: acr
+  name: guid(acr.id, containerPullIdentity.id, 'AcrPull')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
     principalId: containerPullIdentity.properties.principalId
@@ -209,6 +209,9 @@ resource mediaContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
 resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: aiAppName
   location: location
+  dependsOn: [
+    acrPullAssignment
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -260,14 +263,17 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
-  dependsOn: [
-    acrPullAssignment
-  ]
 }
 
 resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: apiAppName
   location: location
+  dependsOn: [
+    database
+    mediaContainer
+    aiApp
+    postgresAllowAzure
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -451,17 +457,14 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
-  dependsOn: [
-    database
-    mediaContainer
-    aiApp
-    postgresAllowAzure
-  ]
 }
 
 resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: frontendAppName
   location: location
+  dependsOn: [
+    apiApp
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -507,9 +510,6 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
-  dependsOn: [
-    apiApp
-  ]
 }
 
 output acrLoginServer string = acr.properties.loginServer
