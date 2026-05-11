@@ -126,6 +126,6 @@ def test_generate_with_media_uses_cues_once():
         hashtag_count=5,
         media_urls=["https://example.com/img.png"],
     )
-    captions, best_idx, cues = sut.generate_captions(req, trace_id="trace123")
+    _captions, best_idx, cues = sut.generate_captions(req, trace_id="trace123")
     assert best_idx == 0
     assert cues and "red shoes" in cues

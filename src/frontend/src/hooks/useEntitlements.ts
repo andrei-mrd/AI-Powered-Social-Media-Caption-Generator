@@ -44,9 +44,9 @@ export function useEntitlements(pollMs = 30000) {
   useEffect(() => {
     load();
     if (!pollMs || pollMs < 5000) return;
-    const id = window.setInterval(load, pollMs);
+    const id = globalThis.setInterval(load, pollMs);
     return () => {
-      window.clearInterval(id);
+      globalThis.clearInterval(id);
       abortRef.current?.abort();
     };
   }, [load, pollMs]);

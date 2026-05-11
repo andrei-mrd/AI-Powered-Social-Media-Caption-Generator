@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Hash, Copy, CheckCircle2, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,8 @@ interface GenerateResult {
   hashtags: string[];
 }
 
+type FormSubmitEvent = { preventDefault: () => void };
+
 export default function Generator() {
   const [topic, setTopic] = useState('');
   const [platform, setPlatform] = useState('instagram');
@@ -39,7 +41,7 @@ export default function Generator() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  const handleGenerate = async (e: FormEvent<HTMLFormElement>) => {
+  const handleGenerate = async (e: FormSubmitEvent) => {
     e.preventDefault();
     if (!topic) return;
     

@@ -4,6 +4,8 @@ import { UserPlus } from 'lucide-react';
 import { readApiError, normalizeError } from '../utils/api';
 import './Auth.css';
 
+type FormSubmitEvent = { preventDefault: () => void };
+
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,7 +14,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: FormSubmitEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {

@@ -2,10 +2,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
 interface Props {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }
 
-export default function ProtectedRoute({ children }: Props) {
+export default function ProtectedRoute({ children }: Readonly<Props>) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {

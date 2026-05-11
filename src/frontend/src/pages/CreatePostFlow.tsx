@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Film, ArrowLeft, Sparkles, BookmarkCheck, Tag, Loader2, Upload } from 'lucide-react';
 import { readApiError, normalizeError } from '../utils/api';
 import './CreatePostFlow.css';
 
 type Step = 'media' | 'content' | 'schedule';
+type FormSubmitEvent = { preventDefault: () => void };
 
 interface MediaItem {
   id: string;
@@ -126,7 +127,7 @@ export default function CreatePostFlow() {
     else if (step === 'content') setStep('media');
   };
 
-  const handleGenerate = async (e: FormEvent<HTMLFormElement>) => {
+  const handleGenerate = async (e: FormSubmitEvent) => {
     e.preventDefault();
     if (!description.trim()) {
       setGenerateError('Description is required.');
@@ -236,6 +237,7 @@ export default function CreatePostFlow() {
       </div>
     </button>
   )), [captions, selectedCaptionIdx]);
+  const selectedCaption = selectedCaptionIdx === null ? undefined : captions[selectedCaptionIdx];
 
   return (
     <div className="flow-shell animate-fade-in">
@@ -467,7 +469,7 @@ export default function CreatePostFlow() {
             <label className="form-block">
               <span>Selected caption</span>
               <div className="selected-caption-box">
-                <SelectedCaptionPreview caption={selectedCaptionIdx !== null ? captions[selectedCaptionIdx] : undefined} />
+                <SelectedCaptionPreview caption={selectedCaption} />
               </div>
             </label>
           </div>

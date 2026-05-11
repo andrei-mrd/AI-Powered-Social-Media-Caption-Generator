@@ -5,6 +5,8 @@ import { useAuth } from '../context/useAuth';
 import { readApiError, normalizeError } from '../utils/api';
 import './Auth.css';
 
+type FormSubmitEvent = { preventDefault: () => void };
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,7 +15,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { refresh } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormSubmitEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');

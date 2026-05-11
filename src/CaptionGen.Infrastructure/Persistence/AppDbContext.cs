@@ -8,6 +8,9 @@ namespace CaptionGen.Infrastructure.Persistence;
 
 public sealed class AppDbContext : DbContext
 {
+    private const string CreatedAtUtcColumn = "created_at_utc";
+    private const string UserIdColumn = "user_id";
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
@@ -31,7 +34,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.Email).HasColumnName("email").HasMaxLength(320).IsRequired();
             b.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
             b.HasIndex(x => x.Email).IsUnique();
         });
 
@@ -41,7 +44,7 @@ public sealed class AppDbContext : DbContext
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("id");
-            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.UserId).HasColumnName(UserIdColumn).IsRequired();
 
             b.Property(x => x.Description).HasColumnName("description").HasMaxLength(4000).IsRequired();
             b.Property(x => x.Platform).HasColumnName("platform").HasMaxLength(32).IsRequired();
@@ -50,7 +53,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Goal).HasColumnName("goal").HasMaxLength(32).IsRequired();
             b.Property(x => x.Status).HasColumnName("status").HasMaxLength(24).IsRequired();
 
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
             b.Property(x => x.ScheduledAtUtc).HasColumnName("scheduled_at_utc");
 
             b.HasIndex(x => x.UserId);
@@ -69,11 +72,11 @@ public sealed class AppDbContext : DbContext
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("id");
-            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.UserId).HasColumnName(UserIdColumn).IsRequired();
 
             b.Property(x => x.Type).HasColumnName("type").HasMaxLength(16).IsRequired();
             b.Property(x => x.StoragePath).HasColumnName("storage_path").HasMaxLength(1024).IsRequired();
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
 
             b.HasIndex(x => x.UserId);
             b.HasIndex(x => x.CreatedAtUtc);
@@ -99,7 +102,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Cta).HasColumnName("cta").HasMaxLength(500);
             b.Property(x => x.IsSelected).HasColumnName("is_selected").HasDefaultValue(false).IsRequired();
             b.Property(x => x.Score).HasColumnName("score");
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
 
             b.HasIndex(x => x.PostId);
             b.HasIndex(x => new { x.PostId, x.VariantIndex }).IsUnique();
@@ -145,7 +148,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.SeatsIncluded).HasColumnName("seats_included").IsRequired();
             b.Property(x => x.SchedulingEnabled).HasColumnName("scheduling_enabled").IsRequired();
             b.Property(x => x.AiImproveEnabled).HasColumnName("ai_improve_enabled").IsRequired();
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
 
             b.HasIndex(x => x.Slug).IsUnique();
         });
@@ -156,11 +159,11 @@ public sealed class AppDbContext : DbContext
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("id");
-            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.UserId).HasColumnName(UserIdColumn).IsRequired();
             b.Property(x => x.PlanId).HasColumnName("plan_id").IsRequired();
             b.Property(x => x.ActiveUntilUtc).HasColumnName("active_until_utc");
             b.Property(x => x.SeatsInUse).HasColumnName("seats_in_use").IsRequired();
-            b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            b.Property(x => x.CreatedAtUtc).HasColumnName(CreatedAtUtcColumn).IsRequired();
 
             b.HasIndex(x => x.UserId).IsUnique();
             b.HasIndex(x => x.PlanId);
@@ -182,7 +185,7 @@ public sealed class AppDbContext : DbContext
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("id");
-            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.UserId).HasColumnName(UserIdColumn).IsRequired();
             b.Property(x => x.PeriodStartUtc).HasColumnName("period_start_utc").IsRequired();
             b.Property(x => x.CaptionsUsed).HasColumnName("captions_used").IsRequired();
             b.Property(x => x.MediaUsed).HasColumnName("media_used").IsRequired();
@@ -202,7 +205,7 @@ public sealed class AppDbContext : DbContext
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("id");
-            b.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+            b.Property(x => x.UserId).HasColumnName(UserIdColumn).IsRequired();
             b.Property(x => x.Platform).HasColumnName("platform").HasMaxLength(32).IsRequired();
             b.Property(x => x.PlatformUserId).HasColumnName("platform_user_id").HasMaxLength(128).IsRequired();
             b.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(256).IsRequired();

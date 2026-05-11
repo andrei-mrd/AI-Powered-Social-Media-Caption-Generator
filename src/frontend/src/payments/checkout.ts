@@ -31,7 +31,7 @@ export async function startStripeCheckout(planSlug: string): Promise<void> {
 
   if (data.url) {
     sessionStorage.setItem('pendingPlanSlug', planSlug);
-    window.location.assign(data.url);
+    globalThis.location.assign(data.url);
     return;
   }
 
