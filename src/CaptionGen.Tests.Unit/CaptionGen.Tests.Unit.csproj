@@ -7,7 +7,7 @@
     <IsPackable>false</IsPackable>
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Include>[CaptionGen.Application*]*,[CaptionGen.Domain*]*,[CaptionGen.Infrastructure*]*</Include>
+    <Include>[CaptionGen.Api*]*,[CaptionGen.Application*]*,[CaptionGen.Domain*]*,[CaptionGen.Infrastructure*]*</Include>
     <Exclude>[CaptionGen.Infrastructure.Persistence.Migrations*]*</Exclude>
   </PropertyGroup>
 
@@ -30,7 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CaptionGen.Application\CaptionGen.Application.csproj" />
+    <ProjectReference Include="..\CaptionGen.Api\CaptionGen.Api.csproj" />
     <ProjectReference Include="..\CaptionGen.Infrastructure\CaptionGen.Infrastructure.csproj" />
   </ItemGroup>
 
