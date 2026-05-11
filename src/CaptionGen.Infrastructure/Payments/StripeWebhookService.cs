@@ -60,7 +60,10 @@ public sealed class StripeWebhookService : IPaymentWebhookService
                 await HandleSubscriptionDeletedAsync(stripeEvent, cancellationToken);
                 return;
             default:
-                _logger.LogInformation("Ignoring Stripe event type {Type}", stripeEvent.Type);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Ignoring Stripe event type {Type}", stripeEvent.Type);
+                }
                 return;
         }
     }
@@ -146,18 +149,24 @@ public sealed class StripeWebhookService : IPaymentWebhookService
         try
         {
             await _entitlements.AssignPlanAsync(userId, planSlug, cancellationToken);
-            _logger.LogInformation(
-                "Updated entitlement for user {UserId} to plan {Plan} from Stripe event {EventType}.",
-                userId,
-                planSlug,
-                eventType);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Updated entitlement for user {UserId} to plan {Plan} from Stripe event {EventType}.",
+                    userId,
+                    planSlug,
+                    eventType);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update entitlement for user {UserId} from Stripe event {EventType}.",
                 userId,
                 eventType);
-            throw;
+            throw new PaymentServiceException(
+                $"Failed to update entitlement from Stripe event '{eventType}'.",
+                false,
+                ex);
         }
     }
 

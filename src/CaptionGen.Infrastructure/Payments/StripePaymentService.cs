@@ -67,8 +67,11 @@ public sealed class StripePaymentService : IPaymentService
                 throw new PaymentServiceException("Stripe session was created without an id or url.");
             }
 
-            _logger.LogInformation("Created Stripe checkout session {SessionId} for user {UserId} plan {Plan}",
-                session.Id, userId, planSlug);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Created Stripe checkout session {SessionId} for user {UserId} plan {Plan}",
+                    session.Id, userId, planSlug);
+            }
 
             return new CheckoutSessionResult(session.Id, session.Url);
         }

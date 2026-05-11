@@ -78,7 +78,7 @@ public sealed class EntitlementService : IEntitlementService
         if (string.IsNullOrWhiteSpace(normalizedSlug))
             throw new InvalidOperationException("Plan slug is required.");
 
-        var plan = await _db.Plans.FirstOrDefaultAsync(p => p.Slug.ToLower() == normalizedSlug, cancellationToken);
+        var plan = await _db.Plans.FirstOrDefaultAsync(p => p.Slug == normalizedSlug, cancellationToken);
         if (plan is null)
             throw new InvalidOperationException($"Plan '{planSlug}' not found.");
 

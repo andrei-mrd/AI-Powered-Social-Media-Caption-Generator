@@ -43,7 +43,10 @@ public static class DbInitializer
 
         if (await db.Users.AnyAsync(u => u.Email == demoEmail, ct))
         {
-            logger.LogInformation("Seed skipped: demo user already exists ({Email}).", demoEmail);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Seed skipped: demo user already exists ({Email}).", demoEmail);
+            }
             return;
         }
 
@@ -58,7 +61,10 @@ public static class DbInitializer
         db.Users.Add(user);
         await db.SaveChangesAsync(ct);
 
-        logger.LogInformation("Seeded demo user {Email}.", demoEmail);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Seeded demo user {Email}.", demoEmail);
+        }
     }
 
     private static async Task SeedPlansAsync(AppDbContext db, ILogger logger, CancellationToken ct)
@@ -122,7 +128,10 @@ public static class DbInitializer
         {
             db.Plans.AddRange(toInsert);
             await db.SaveChangesAsync(ct);
-            logger.LogInformation("Seeded plans: {Slugs}", string.Join(", ", toInsert.Select(p => p.Slug)));
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Seeded plans: {Slugs}", string.Join(", ", toInsert.Select(p => p.Slug)));
+            }
         }
     }
 
@@ -143,26 +152,28 @@ public static class DbInitializer
             .Where(u => !db.UserEntitlements.Any(e => e.UserId == u.Id))
             .ToListAsync(ct);
 
-        if (usersWithoutEntitlement.Count == 0)
-            goto UpdateFreeEntitlements;
-
-        foreach (var user in usersWithoutEntitlement)
+        if (usersWithoutEntitlement.Count > 0)
         {
-            db.UserEntitlements.Add(new UserEntitlement
+            foreach (var user in usersWithoutEntitlement)
             {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                PlanId = basicPlan.Id,
-                ActiveUntilUtc = null,
-                SeatsInUse = 1,
-                CreatedAtUtc = DateTime.UtcNow
-            });
+                db.UserEntitlements.Add(new UserEntitlement
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    PlanId = basicPlan.Id,
+                    ActiveUntilUtc = null,
+                    SeatsInUse = 1,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            }
+
+            await db.SaveChangesAsync(ct);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Assigned basic plan to {Count} users without entitlements.", usersWithoutEntitlement.Count);
+            }
         }
 
-        await db.SaveChangesAsync(ct);
-        logger.LogInformation("Assigned basic plan to {Count} users without entitlements.", usersWithoutEntitlement.Count);
-
-UpdateFreeEntitlements:
         if (freePlan is not null && basicPlan.Id != freePlan.Id)
         {
             var updated = await db.UserEntitlements
@@ -171,7 +182,10 @@ UpdateFreeEntitlements:
 
             if (updated > 0)
             {
-                logger.LogInformation("Updated {Count} user entitlements from free to basic.", updated);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation("Updated {Count} user entitlements from free to basic.", updated);
+                }
             }
         }
     }
