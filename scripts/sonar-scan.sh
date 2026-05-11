@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SONAR_HOST="${SONAR_HOST:-http://localhost:9000}"
-PROJECT_KEY="CaptionGen"
+PROJECT_KEY="${PROJECT_KEY:-CaptionGen}"
+PROJECT_NAME="${PROJECT_NAME:-CaptionGen}"
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then
   echo "Error: SONAR_TOKEN is not set." >&2
@@ -36,15 +37,20 @@ cd "$ROOT"
 # ── 2. SonarScanner begin ─────────────────────────────────────────────────────
 echo ""
 echo "==> [2/4] Starting SonarScanner analysis..."
+SONAR_ORG_ARGS=()
+if [[ -n "${SONAR_ORGANIZATION:-}" ]]; then
+  SONAR_ORG_ARGS=(/o:"$SONAR_ORGANIZATION")
+fi
+
 dotnet sonarscanner begin \
   /k:"$PROJECT_KEY" \
-  /n:"CaptionGen" \
+  "${SONAR_ORG_ARGS[@]}" \
+  /n:"$PROJECT_NAME" \
   /d:sonar.host.url="$SONAR_HOST" \
   /d:sonar.token="$SONAR_TOKEN" \
   /d:sonar.projectBaseDir="$ROOT" \
-  /d:sonar.tests="ai-service/tests,src/CaptionGen.Tests.Unit,src/CaptionGen.Tests.Integration" \
-  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,**/ai-service/tests/**,**/src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Integration/**" \
-  /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,**/ai-service/tests/**,**/src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Integration/**" \
+  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,ai-service/tests/**,**/ai-service/tests/**,src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Unit/**,src/CaptionGen.Tests.Integration/**,**/src/CaptionGen.Tests.Integration/**" \
+  /d:sonar.coverage.exclusions="**/Contracts/**,**/Migrations/**,**/Program.cs,src/CaptionGen.Domain/**,**/src/CaptionGen.Domain/**,src/frontend/**,**/src/frontend/**,ai-service/tests/**,**/ai-service/tests/**,src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Unit/**,src/CaptionGen.Tests.Integration/**,**/src/CaptionGen.Tests.Integration/**" \
   /d:sonar.cs.opencover.reportsPaths="$ROOT/TestResults/**/coverage.opencover.xml" \
   /d:sonar.python.coverage.reportPaths="$ROOT/ai-service/coverage.xml" \
   /d:sonar.python.version=3

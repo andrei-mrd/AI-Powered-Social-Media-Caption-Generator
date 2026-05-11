@@ -3,9 +3,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
 WORKDIR /src
 
-COPY . .
+COPY CaptionGen.sln ./
+COPY src/CaptionGen.Api/CaptionGen.Api.csproj src/CaptionGen.Api/
+COPY src/CaptionGen.Application/CaptionGen.Application.csproj src/CaptionGen.Application/
+COPY src/CaptionGen.Domain/CaptionGen.Domain.csproj src/CaptionGen.Domain/
+COPY src/CaptionGen.Infrastructure/CaptionGen.Infrastructure.csproj src/CaptionGen.Infrastructure/
+RUN dotnet restore src/CaptionGen.Api/CaptionGen.Api.csproj
+
+COPY src/CaptionGen.Api/ src/CaptionGen.Api/
+COPY src/CaptionGen.Application/ src/CaptionGen.Application/
+COPY src/CaptionGen.Domain/ src/CaptionGen.Domain/
+COPY src/CaptionGen.Infrastructure/ src/CaptionGen.Infrastructure/
 RUN dotnet publish src/CaptionGen.Api/CaptionGen.Api.csproj \
     -c Release \
+    --no-restore \
     -o /app/publish \
     /p:UseAppHost=false \
     /p:UseSharedCompilation=false

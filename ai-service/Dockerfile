@@ -13,7 +13,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin captiongen
 COPY requirements.txt .
 RUN pip install --only-binary=:all: -r requirements.txt
 
-COPY . .
+COPY main.py caption_service.py models.py ./
 
 USER captiongen
 EXPOSE 8001

@@ -223,6 +223,7 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
+        clientCertificateMode: 'require'
         external: true
         targetPort: 8001
         transport: 'auto'
@@ -285,6 +286,7 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
+        clientCertificateMode: 'require'
         external: true
         targetPort: 8080
         transport: 'auto'
@@ -476,6 +478,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
+        clientCertificateMode: 'require'
         external: true
         targetPort: 8080
         transport: 'auto'

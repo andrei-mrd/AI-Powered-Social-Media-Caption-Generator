@@ -5,10 +5,10 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>opencover</Format>
-          <Include>[CaptionGen.Application]*,[CaptionGen.Domain]*,[CaptionGen.Infrastructure]*</Include>
-          <Exclude>[CaptionGen.Tests.*]*,[*.Tests.*]*</Exclude>
+          <Include>[CaptionGen.Api]*,[CaptionGen.Application]*,[CaptionGen.Infrastructure]*</Include>
+          <Exclude>[CaptionGen.Domain]*,[CaptionGen.Tests.*]*,[*.Tests.*]*</Exclude>
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
-          <ExcludeByFile>**/Migrations/**/*.cs,**/*.Designer.cs</ExcludeByFile>
+          <ExcludeByFile>**/Contracts/**/*.cs,**/Migrations/**/*.cs,**/*.Designer.cs</ExcludeByFile>
           <SingleHit>false</SingleHit>
           <UseSourceLink>false</UseSourceLink>
         </Configuration>

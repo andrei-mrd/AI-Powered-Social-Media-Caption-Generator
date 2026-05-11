@@ -18,3 +18,12 @@ EXPOSE 8080
 
 COPY src/frontend/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
+
+RUN chown -R nginx:nginx \
+    /etc/nginx/conf.d \
+    /etc/nginx/templates \
+    /usr/share/nginx/html \
+    /var/cache/nginx \
+    /var/run
+
+USER nginx

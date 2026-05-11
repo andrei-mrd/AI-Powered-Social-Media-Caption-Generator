@@ -10,6 +10,44 @@ namespace CaptionGen.Tests.Unit.Media;
 public sealed class MediaHandlersTests
 {
     [Fact]
+    public async Task ListMedia_ShouldReturnAssetsWithPublicUrls()
+    {
+        var userId = Guid.NewGuid();
+        var createdAt = DateTime.UtcNow;
+        var assets = new[]
+        {
+            new MediaAsset
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Type = "image",
+                StoragePath = "images/photo.jpg",
+                CreatedAtUtc = createdAt
+            }
+        };
+        var repo = new Mock<IMediaAssetRepository>(MockBehavior.Strict);
+        var storage = new Mock<IMediaStorageService>(MockBehavior.Strict);
+
+        repo.Setup(x => x.ListByUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(assets);
+        storage.Setup(x => x.BuildPublicUrl("images/photo.jpg"))
+            .Returns("https://cdn.test/images/photo.jpg");
+
+        var sut = new ListMediaHandler(repo.Object, storage.Object);
+
+        var result = await sut.Handle(new ListMediaQuery(userId), CancellationToken.None);
+
+        result.Should().ContainSingle()
+            .Which.Should().BeEquivalentTo(new MediaAssetDto(
+                assets[0].Id,
+                "image",
+                "https://cdn.test/images/photo.jpg",
+                createdAt));
+        repo.VerifyAll();
+        storage.VerifyAll();
+    }
+
+    [Fact]
     public async Task UploadMedia_ShouldPersistAssetAndReturnDto()
     {
         var repo = new Mock<IMediaAssetRepository>(MockBehavior.Strict);
