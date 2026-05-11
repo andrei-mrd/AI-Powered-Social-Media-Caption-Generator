@@ -32,8 +32,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!showPlanBanner) return;
-    const id = window.setTimeout(() => setShowPlanBanner(false), 5000);
-    return () => window.clearTimeout(id);
+    const id = globalThis.setTimeout(() => setShowPlanBanner(false), 5000);
+    return () => globalThis.clearTimeout(id);
   }, [showPlanBanner]);
 
   const formatDate = (value?: string | null) => {
@@ -53,6 +53,58 @@ export default function Dashboard() {
       setIsCheckingOut(false);
     }
   };
+
+  let planContent = <div className="skeleton-loader"></div>;
+  if (entitlementError) {
+    planContent = <p className="plan-error">{entitlementError}</p>;
+  } else if (entitlement) {
+    planContent = (
+      <>
+        <div className="plan-stats-grid">
+          <div className="stat-card">
+            <span className="stat-label">Captions</span>
+            <div className="stat-value">{entitlement.captionsUsedThisPeriod} <span className="stat-max">/ {entitlement.captionGenerationsPerMonth}</span></div>
+            <div className="stat-bar"><div className="stat-fill" style={{width: `${Math.min(100, (entitlement.captionsUsedThisPeriod / entitlement.captionGenerationsPerMonth) * 100)}%`}}></div></div>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Media Assets</span>
+            <div className="stat-value">{entitlement.mediaUsedThisPeriod} <span className="stat-max">/ {entitlement.mediaAssetsLimit}</span></div>
+            <div className="stat-bar"><div className="stat-fill blue" style={{width: `${Math.min(100, (entitlement.mediaUsedThisPeriod / entitlement.mediaAssetsLimit) * 100)}%`}}></div></div>
+          </div>
+        </div>
+
+        <ul className="plan-list">
+          <li><Activity size={14} /> Seats: <strong>{entitlement.seatsIncluded}</strong></li>
+          <li><Activity size={14} /> Scheduling: <strong>{entitlement.schedulingEnabled ? 'On' : 'Off'}</strong></li>
+          <li><Activity size={14} /> Auto-Improve: <strong>{entitlement.aiImproveEnabled ? 'On' : 'Off'}</strong></li>
+          <li><Activity size={14} /> Renewal: <strong>{formatDate(entitlement.activeUntilUtc)}</strong></li>
+        </ul>
+
+        <div className="plan-checkout">
+          <select
+            value={planSlug}
+            onChange={e => setPlanSlug(e.target.value)}
+            className="plan-select"
+            aria-label="Choose plan to purchase"
+            disabled={isCheckingOut}
+          >
+            <option value="freelancer">Freelancer</option>
+            <option value="influencer">Influencer</option>
+            <option value="agency">Agency</option>
+          </select>
+          <button
+            type="button"
+            className="btn btn-primary plan-checkout-btn"
+            onClick={handleCheckout}
+            disabled={isCheckingOut}
+          >
+            {isCheckingOut ? 'Redirecting…' : 'Upgrade Plan'}
+          </button>
+        </div>
+        {checkoutError && <p className="plan-error">{checkoutError}</p>}
+      </>
+    );
+  }
 
   return (
     <motion.div 
@@ -145,56 +197,7 @@ export default function Dashboard() {
               <RefreshCw size={14} className={loading ? 'spin' : ''} />
             </button>
           </div>
-          {entitlementError ? (
-            <p className="plan-error">{entitlementError}</p>
-          ) : entitlement ? (
-            <>
-              <div className="plan-stats-grid">
-                <div className="stat-card">
-                  <span className="stat-label">Captions</span>
-                  <div className="stat-value">{entitlement.captionsUsedThisPeriod} <span className="stat-max">/ {entitlement.captionGenerationsPerMonth}</span></div>
-                  <div className="stat-bar"><div className="stat-fill" style={{width: `${Math.min(100, (entitlement.captionsUsedThisPeriod / entitlement.captionGenerationsPerMonth) * 100)}%`}}></div></div>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Media Assets</span>
-                  <div className="stat-value">{entitlement.mediaUsedThisPeriod} <span className="stat-max">/ {entitlement.mediaAssetsLimit}</span></div>
-                  <div className="stat-bar"><div className="stat-fill blue" style={{width: `${Math.min(100, (entitlement.mediaUsedThisPeriod / entitlement.mediaAssetsLimit) * 100)}%`}}></div></div>
-                </div>
-              </div>
-              
-              <ul className="plan-list">
-                <li><Activity size={14} /> Seats: <strong>{entitlement.seatsIncluded}</strong></li>
-                <li><Activity size={14} /> Scheduling: <strong>{entitlement.schedulingEnabled ? 'On' : 'Off'}</strong></li>
-                <li><Activity size={14} /> Auto-Improve: <strong>{entitlement.aiImproveEnabled ? 'On' : 'Off'}</strong></li>
-                <li><Activity size={14} /> Renewal: <strong>{formatDate(entitlement.activeUntilUtc)}</strong></li>
-              </ul>
-              
-              <div className="plan-checkout">
-                <select
-                  value={planSlug}
-                  onChange={e => setPlanSlug(e.target.value)}
-                  className="plan-select"
-                  aria-label="Choose plan to purchase"
-                  disabled={isCheckingOut}
-                >
-                  <option value="freelancer">Freelancer</option>
-                  <option value="influencer">Influencer</option>
-                  <option value="agency">Agency</option>
-                </select>
-                <button
-                  type="button"
-                  className="btn btn-primary plan-checkout-btn"
-                  onClick={handleCheckout}
-                  disabled={isCheckingOut}
-                >
-                  {isCheckingOut ? 'Redirecting…' : 'Upgrade Plan'}
-                </button>
-              </div>
-              {checkoutError && <p className="plan-error">{checkoutError}</p>}
-            </>
-          ) : (
-            <div className="skeleton-loader"></div>
-          )}
+          {planContent}
         </motion.div>
       </div>
     </motion.div>

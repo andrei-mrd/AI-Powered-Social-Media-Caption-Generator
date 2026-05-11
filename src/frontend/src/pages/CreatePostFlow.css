@@ -250,8 +250,12 @@
   border-radius: 12px;
   padding: 12px;
   background: #f8fafc;
+  color: inherit;
   cursor: pointer;
+  font: inherit;
+  text-align: left;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
 }
 
 .cp-card.selected {

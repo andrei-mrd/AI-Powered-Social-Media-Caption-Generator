@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Film, ArrowLeft, Sparkles, BookmarkCheck, Tag, Loader2, Upload } from 'lucide-react';
 import { readApiError, normalizeError } from '../utils/api';
@@ -29,7 +29,7 @@ interface CreateResponse {
   traceId?: string;
 }
 
-function SelectedCaptionPreview({ caption }: { caption?: CaptionVariant }) {
+function SelectedCaptionPreview({ caption }: Readonly<{ caption?: CaptionVariant }>) {
   if (!caption) {
     return <>Pick a caption first</>;
   }
@@ -39,7 +39,7 @@ function SelectedCaptionPreview({ caption }: { caption?: CaptionVariant }) {
       <Tag size={14} /> {caption.text}
       {caption.hashtags?.length ? (
         <div className="selected-caption-hashtags">
-          {caption.hashtags.map((hashtag, index) => <span key={index} className="badge">{hashtag}</span>)}
+          {caption.hashtags.map((hashtag) => <span key={hashtag} className="badge">{hashtag}</span>)}
         </div>
       ) : null}
     </>
@@ -126,7 +126,7 @@ export default function CreatePostFlow() {
     else if (step === 'content') setStep('media');
   };
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleGenerate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!description.trim()) {
       setGenerateError('Description is required.');
@@ -219,13 +219,11 @@ export default function CreatePostFlow() {
   };
 
   const captionCards = useMemo(() => captions.map((cap, idx) => (
-    <div
-      key={idx}
+    <button
+      key={cap.variantIndex}
+      type="button"
       className={`cp-card ${selectedCaptionIdx === idx ? 'selected' : ''}`}
       onClick={() => setSelectedCaptionIdx(idx)}
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCaptionIdx(idx); }}
-      role="button"
       aria-pressed={selectedCaptionIdx === idx}
     >
       <div className="cp-card-header">
@@ -236,7 +234,7 @@ export default function CreatePostFlow() {
       <div className="card-meta">
         {cap.score ? `Score ${cap.score}` : 'Tap to choose'} • {cap.hashtags?.slice(0, 4).join(' ')}
       </div>
-    </div>
+    </button>
   )), [captions, selectedCaptionIdx]);
 
   return (
