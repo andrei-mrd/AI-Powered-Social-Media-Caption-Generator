@@ -47,7 +47,7 @@ export default function Settings() {
   };
 
   const connect = (platform: string) => {
-    window.location.href = `/api/social/connect/${platform}`;
+    globalThis.location.href = `/api/social/connect/${platform}`;
   };
 
   const disconnect = async (platform: string) => {
@@ -106,6 +106,12 @@ export default function Settings() {
           {PLATFORMS.map(({ id, label, comingSoon }) => {
             const account = getAccount(id);
             const isDisconnecting = disconnecting === id;
+            let platformStatus = <span className="platform-sub muted">Not connected</span>;
+            if (account) {
+              platformStatus = <span className="platform-user">{account.displayName}</span>;
+            } else if (comingSoon) {
+              platformStatus = <span className="platform-sub muted">Coming soon</span>;
+            }
 
             return (
               <motion.div
@@ -118,13 +124,7 @@ export default function Settings() {
                   <div className={`platform-icon ${id}`} />
                   <div>
                     <span className="platform-name">{label}</span>
-                    {account ? (
-                      <span className="platform-user">{account.displayName}</span>
-                    ) : comingSoon ? (
-                      <span className="platform-sub muted">Coming soon</span>
-                    ) : (
-                      <span className="platform-sub muted">Not connected</span>
-                    )}
+                    {platformStatus}
                   </div>
                 </div>
 

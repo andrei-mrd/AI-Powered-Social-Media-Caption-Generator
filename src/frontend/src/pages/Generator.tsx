@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Hash, Copy, CheckCircle2, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -39,7 +39,7 @@ export default function Generator() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleGenerate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!topic) return;
     
@@ -240,15 +240,27 @@ export default function Generator() {
                   <h2>Generated Options</h2>
                   <span className="badge badge-subtle">{platform}</span>
                 </div>
-                <button
-                  type="button"
-                  className={`btn ${savedIndex !== null ? 'btn-secondary text-green-600' : 'btn-primary'}`}
-                  onClick={handleSaveSelected}
-                  disabled={selectedIndex === null || savedIndex !== null}
-                >
-                  {savedIndex !== null ? <CheckCircle2 size={16} /> : <Bookmark size={16} />}
-                  {savedIndex !== null ? 'Saved to Library' : 'Save Selected'}
-                </button>
+                {savedIndex === null ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleSaveSelected}
+                    disabled={selectedIndex === null}
+                  >
+                    <Bookmark size={16} />
+                    Save Selected
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-secondary text-green-600"
+                    onClick={handleSaveSelected}
+                    disabled
+                  >
+                    <CheckCircle2 size={16} />
+                    Saved to Library
+                  </button>
+                )}
               </div>
 
               <div className="options-list">
@@ -257,7 +269,7 @@ export default function Generator() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    key={i}
+                    key={cap.text}
                     className={`result-card ${selectedIndex === i ? 'selected' : ''}`}
                     onClick={() => handleSelectCard(i)}
                   >
@@ -297,8 +309,8 @@ export default function Generator() {
                     <h4 className="hashtags-title">Recommended Tags</h4>
                   </div>
                   <div className="tags-list">
-                    {result.hashtags.map((tag: string, i: number) => (
-                      <span key={i} className="hashtag">{tag}</span>
+                    {result.hashtags.map((tag: string) => (
+                      <span key={tag} className="hashtag">{tag}</span>
                     ))}
                   </div>
                 </motion.div>

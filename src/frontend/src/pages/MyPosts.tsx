@@ -57,10 +57,10 @@ export default function MyPosts() {
       }
     };
     load();
-    const interval = window.setInterval(load, 10000); // poll every 10s to reflect status changes
+    const interval = globalThis.setInterval(load, 10000); // poll every 10s to reflect status changes
     return () => {
       isMounted = false;
-      window.clearInterval(interval);
+      globalThis.clearInterval(interval);
     };
   }, [navigate]);
 
@@ -86,6 +86,79 @@ export default function MyPosts() {
     </div>
   );
 
+  let postsContent = (
+    <div className="loading-grid">
+      {[1, 2, 3].map(i => <div key={i} className="skeleton" />)}
+    </div>
+  );
+  if (posts?.length === 0) {
+    postsContent = (
+      <div className="empty-state">
+        <div className="empty-icon">📁</div>
+        <h3>No posts yet</h3>
+        <p>Head over to <a href="/create-post">Create Post</a> to create your first post.</p>
+      </div>
+    );
+  } else if (posts) {
+    postsContent = (
+      <div className="posts-list">
+        {posts.map(post => (
+          <div key={post.id} className="post-card">
+            <div className="post-card-header">
+              <div className="platform-pill">
+                <span>{platformIcon[post.platform] ?? '📱'}</span>
+                <span className="platform-name">{post.platform}</span>
+              </div>
+              <div className="post-meta-right">
+                <span className={`status-badge ${post.status}`}>{post.status}</span>
+                {post.scheduledAtUtc && (
+                  <span className="post-date">
+                    <Clock size={13} />
+                    {formatDate(post.scheduledAtUtc, true)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="post-body">
+              <div className="captions-stack">
+                <div className="caption-entry">
+                  <span className="variant-label">Caption</span>
+                  <p className="caption-body">{post.selectedCaption ?? 'Not selected yet'}</p>
+                  {post.selectedScore ? <span className="badge score">Score {post.selectedScore}</span> : null}
+                  {post.selectedHashtags?.length ? (
+                    <div className="hashtags-row">
+                      {post.selectedHashtags.map(h => <span key={h} className="badge">{h}</span>)}
+                    </div>
+                  ) : null}
+                </div>
+                {post.media?.length ? (
+                  <div className="media-grid-thumbs">
+                    {post.media.map(m => (
+                      <div key={m.id} className="media-thumb-card">
+                        {m.type === 'video' ? (
+                          <video src={m.url} controls preload="metadata">
+                            <track kind="captions" />
+                          </video>
+                        ) : (
+                          <img src={m.url} alt="" loading="lazy" />
+                        )}
+                        <div className="media-thumb-meta">
+                          <span className="badge">{m.type}</span>
+                          <span className="helper">{formatDate(m.createdAtUtc)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="posts-container animate-fade-in">
       <header className="posts-header">
@@ -95,71 +168,7 @@ export default function MyPosts() {
         </div>
       </header>
 
-      {posts === null ? (
-        <div className="loading-grid">
-          {[1, 2, 3].map(i => <div key={i} className="skeleton" />)}
-        </div>
-      ) : posts.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📁</div>
-          <h3>No posts yet</h3>
-          <p>Head over to <a href="/create-post">Create Post</a> to create your first post.</p>
-        </div>
-      ) : (
-        <div className="posts-list">
-          {posts.map(post => (
-            <div key={post.id} className="post-card">
-              <div className="post-card-header">
-                <div className="platform-pill">
-                  <span>{platformIcon[post.platform] ?? '📱'}</span>
-                  <span className="platform-name">{post.platform}</span>
-                </div>
-                <div className="post-meta-right">
-                  <span className={`status-badge ${post.status}`}>{post.status}</span>
-                  {post.scheduledAtUtc && (
-                  <span className="post-date">
-                    <Clock size={13} />
-                    {formatDate(post.scheduledAtUtc, true)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-              <div className="post-body">
-                <div className="captions-stack">
-                  <div className="caption-entry">
-                    <span className="variant-label">Caption</span>
-                    <p className="caption-body">{post.selectedCaption ?? 'Not selected yet'}</p>
-                    {post.selectedScore ? <span className="badge score">Score {post.selectedScore}</span> : null}
-                    {post.selectedHashtags?.length ? (
-                      <div className="hashtags-row">
-                        {post.selectedHashtags.map((h, i) => <span key={i} className="badge">{h}</span>)}
-                      </div>
-                    ) : null}
-                  </div>
-                  {post.media?.length ? (
-                    <div className="media-grid-thumbs">
-                      {post.media.map(m => (
-                        <div key={m.id} className="media-thumb-card">
-                          {m.type === 'video' ? (
-                            <video src={m.url} controls preload="metadata" />
-                          ) : (
-                            <img src={m.url} alt="" loading="lazy" />
-                          )}
-                          <div className="media-thumb-meta">
-                            <span className="badge">{m.type}</span>
-                            <span className="helper">{formatDate(m.createdAtUtc)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {postsContent}
     </div>
   );
 }
