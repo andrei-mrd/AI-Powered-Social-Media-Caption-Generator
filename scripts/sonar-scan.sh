@@ -43,8 +43,8 @@ dotnet sonarscanner begin \
   /d:sonar.token="$SONAR_TOKEN" \
   /d:sonar.projectBaseDir="$ROOT" \
   /d:sonar.tests="ai-service/tests,src/CaptionGen.Tests.Unit,src/CaptionGen.Tests.Integration" \
-  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**" \
-  /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,ai-service/tests/**,src/CaptionGen.Tests.Unit/**,src/CaptionGen.Tests.Integration/**" \
+  /d:sonar.exclusions="**/obj/**,**/bin/**,**/*.Designer.cs,**/node_modules/**,**/.venv/**,**/__pycache__/**,**/dist/**,**/TestResults/**,**/ai-service/tests/**,**/src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Integration/**" \
+  /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,**/ai-service/tests/**,**/src/CaptionGen.Tests.Unit/**,**/src/CaptionGen.Tests.Integration/**" \
   /d:sonar.cs.opencover.reportsPaths="$ROOT/TestResults/**/coverage.opencover.xml" \
   /d:sonar.python.coverage.reportPaths="$ROOT/ai-service/coverage.xml" \
   /d:sonar.python.version=3
