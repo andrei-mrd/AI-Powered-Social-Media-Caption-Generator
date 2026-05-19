@@ -193,6 +193,8 @@ export default function CreatePostFlow() {
     setGlobalError('');
 
     try {
+      const scheduledAtUtc = new Date(scheduleAt).toISOString();
+
       if (selectedCaptionIdx !== null) {
         const selectRes = await fetch(`/api/posts/${postId}/select-caption/${selectedCaptionIdx}`, {
           method: 'POST',
@@ -206,7 +208,7 @@ export default function CreatePostFlow() {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          scheduledAtUtc: scheduleAt,
+          scheduledAtUtc,
           selectedCaptionIndex: selectedCaptionIdx ?? undefined,
           mediaIds: selectedMediaId ? [selectedMediaId] : []
         })
