@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -474,7 +475,14 @@ public sealed class MediaPostsSocialControllerTests
             context.Request.Headers.Cookie = $"linkedin_oauth_state={oauthStateCookie}";
         }
 
-        return new SocialController(mediator.Object, linkedIn.Object, NullLogger<SocialController>.Instance)
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["App:FrontendOrigin"] = "https://frontend.test"
+            })
+            .Build();
+
+        return new SocialController(mediator.Object, linkedIn.Object, configuration, NullLogger<SocialController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = context }
         };

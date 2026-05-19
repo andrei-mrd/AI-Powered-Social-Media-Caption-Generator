@@ -18,15 +18,18 @@ public sealed class SocialController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILinkedInOAuthService _linkedIn;
     private readonly ILogger<SocialController> _logger;
+    private readonly string _frontendOrigin;
 
     public SocialController(
         IMediator mediator,
         ILinkedInOAuthService linkedIn,
+        IConfiguration configuration,
         ILogger<SocialController> logger)
     {
         _mediator = mediator;
         _linkedIn = linkedIn;
         _logger = logger;
+        _frontendOrigin = (configuration["App:FrontendOrigin"] ?? "http://localhost:5173").TrimEnd('/');
     }
 
     [HttpGet("connect/linkedin")]
@@ -56,7 +59,7 @@ public sealed class SocialController : ControllerBase
         if (!string.IsNullOrWhiteSpace(error))
         {
             _logger.LogWarning("LinkedIn OAuth denied by user: {Error}", error);
-            return Redirect("http://localhost:5173/settings?error=linkedin_denied");
+            return Redirect(BuildSettingsUrl("error=linkedin_denied"));
         }
 
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(state))
@@ -75,12 +78,12 @@ public sealed class SocialController : ControllerBase
         try
         {
             await _mediator.Send(new ConnectLinkedInCallbackCommand(userId, code), ct);
-            return Redirect("http://localhost:5173/settings?connected=linkedin");
+            return Redirect(BuildSettingsUrl("connected=linkedin"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "LinkedIn callback failed for user {UserId}", userId);
-            return Redirect("http://localhost:5173/settings?error=linkedin_failed");
+            return Redirect(BuildSettingsUrl("error=linkedin_failed"));
         }
     }
 
@@ -105,4 +108,6 @@ public sealed class SocialController : ControllerBase
         await _mediator.Send(new DisconnectSocialAccountCommand(userId, platform.ToLowerInvariant()), ct);
         return NoContent();
     }
+
+    private string BuildSettingsUrl(string query) => $"{_frontendOrigin}/settings?{query}";
 }

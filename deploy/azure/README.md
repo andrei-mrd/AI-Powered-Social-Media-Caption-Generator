@@ -40,7 +40,7 @@ Optional variables:
 - `STRIPE_INFLUENCER_PRICE_ID`
 - `STRIPE_AGENCY_PRICE_ID`
 - `LINKEDIN_CLIENT_ID`
-- `LINKEDIN_REDIRECT_URI`, defaults to `https://<api-app-domain>/api/social/callback/linkedin` when omitted.
+- `LINKEDIN_REDIRECT_URI`, defaults to `https://<frontend-app-domain>/api/social/callback/linkedin` when omitted.
 
 ## Manual deployment
 
