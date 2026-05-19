@@ -89,7 +89,7 @@ var aiOrigin = 'https://${aiAppName}.${appDomain}'
 var frontendOrigin = 'https://${frontendAppName}.${appDomain}'
 var apiInternalOrigin = 'http://${apiAppName}'
 var aiInternalOrigin = 'http://${aiAppName}'
-var effectiveLinkedInRedirectUri = empty(linkedInRedirectUri) ? '${apiOrigin}/api/social/linkedin/callback' : linkedInRedirectUri
+var effectiveLinkedInRedirectUri = empty(linkedInRedirectUri) ? '${apiOrigin}/api/social/callback/linkedin' : linkedInRedirectUri
 var storageKey = listKeys(storage.id, '2023-01-01').keys[0].value
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storageKey};EndpointSuffix=${environment().suffixes.storage}'
 var mediaPublicBaseUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/${mediaContainerName}'
