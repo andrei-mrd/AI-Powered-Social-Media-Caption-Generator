@@ -60,6 +60,16 @@ param stripeInfluencerPriceId string = ''
 @description('Optional Stripe Agency price ID.')
 param stripeAgencyPriceId string = ''
 
+@description('Optional LinkedIn OAuth client ID.')
+param linkedInClientId string = ''
+
+@secure()
+@description('Optional LinkedIn OAuth client secret.')
+param linkedInClientSecret string = ''
+
+@description('Optional LinkedIn OAuth redirect URI. Defaults to the API callback URL when omitted.')
+param linkedInRedirectUri string = ''
+
 var safeProjectName = toLower(replace(projectName, '-', ''))
 var unique = uniqueString(resourceGroup().id, projectName)
 var acrName = toLower(containerRegistryName)
@@ -79,6 +89,7 @@ var aiOrigin = 'https://${aiAppName}.${appDomain}'
 var frontendOrigin = 'https://${frontendAppName}.${appDomain}'
 var apiInternalOrigin = 'http://${apiAppName}'
 var aiInternalOrigin = 'http://${aiAppName}'
+var effectiveLinkedInRedirectUri = empty(linkedInRedirectUri) ? '${apiOrigin}/api/social/linkedin/callback' : linkedInRedirectUri
 var storageKey = listKeys(storage.id, '2023-01-01').keys[0].value
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storageKey};EndpointSuffix=${environment().suffixes.storage}'
 var mediaPublicBaseUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/${mediaContainerName}'
@@ -326,6 +337,11 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'stripe-webhook-secret'
           value: stripeWebhookSecret
         }
+      ], empty(linkedInClientSecret) ? [] : [
+        {
+          name: 'linkedin-client-secret'
+          value: linkedInClientSecret
+        }
       ])
     }
     template: {
@@ -438,6 +454,14 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'Stripe__PriceIds__agency'
               value: stripeAgencyPriceId
             }
+            {
+              name: 'LinkedIn__ClientId'
+              value: linkedInClientId
+            }
+            {
+              name: 'LinkedIn__RedirectUri'
+              value: effectiveLinkedInRedirectUri
+            }
           ], empty(stripeSecretKey) ? [] : [
             {
               name: 'Stripe__SecretKey'
@@ -447,6 +471,11 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'Stripe__WebhookSecret'
               secretRef: 'stripe-webhook-secret'
+            }
+          ], empty(linkedInClientSecret) ? [] : [
+            {
+              name: 'LinkedIn__ClientSecret'
+              secretRef: 'linkedin-client-secret'
             }
           ])
           resources: {

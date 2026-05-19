@@ -30,6 +30,7 @@ Optional secrets:
 
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+- `LINKEDIN_CLIENT_SECRET`
 
 Optional variables:
 
@@ -38,6 +39,8 @@ Optional variables:
 - `STRIPE_FREELANCER_PRICE_ID`
 - `STRIPE_INFLUENCER_PRICE_ID`
 - `STRIPE_AGENCY_PRICE_ID`
+- `LINKEDIN_CLIENT_ID`
+- `LINKEDIN_REDIRECT_URI`, defaults to the API callback URL when omitted.
 
 ## Manual deployment
 
@@ -70,7 +73,8 @@ az deployment group create \
   --template-file deploy/azure/main.bicep \
   --parameters projectName=captiongen containerRegistryName=captiongenacr123 \
   --parameters apiImage=captiongen-api:latest aiImage=captiongen-ai:latest frontendImage=captiongen-frontend:latest \
-  --parameters postgresAdminPassword='<strong-password>' jwtKey='<32-char-min-key>' tokenEncryptionKey='<base64-32-byte-key>' openAiApiKey='<openai-key>'
+  --parameters postgresAdminPassword='<strong-password>' jwtKey='<32-char-min-key>' tokenEncryptionKey='<base64-32-byte-key>' openAiApiKey='<openai-key>' \
+  --parameters linkedInClientId='<linkedin-client-id>' linkedInClientSecret='<linkedin-client-secret>'
 ```
 
 The deployment outputs the public frontend, API, AI, and media container URLs.

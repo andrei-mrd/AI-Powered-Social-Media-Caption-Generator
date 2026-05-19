@@ -203,6 +203,9 @@ jobs:
           STRIPE_FREELANCER_PRICE_ID: ${{ vars.STRIPE_FREELANCER_PRICE_ID }}
           STRIPE_INFLUENCER_PRICE_ID: ${{ vars.STRIPE_INFLUENCER_PRICE_ID }}
           STRIPE_AGENCY_PRICE_ID: ${{ vars.STRIPE_AGENCY_PRICE_ID }}
+          LINKEDIN_CLIENT_ID: ${{ vars.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+          LINKEDIN_REDIRECT_URI: ${{ vars.LINKEDIN_REDIRECT_URI }}
         run: |
           az deployment group create \
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
@@ -224,4 +227,7 @@ jobs:
             stripeBasicPriceId="${STRIPE_BASIC_PRICE_ID:-}" \
             stripeFreelancerPriceId="${STRIPE_FREELANCER_PRICE_ID:-}" \
             stripeInfluencerPriceId="${STRIPE_INFLUENCER_PRICE_ID:-}" \
-            stripeAgencyPriceId="${STRIPE_AGENCY_PRICE_ID:-}"
+            stripeAgencyPriceId="${STRIPE_AGENCY_PRICE_ID:-}" \
+            linkedInClientId="${LINKEDIN_CLIENT_ID:-}" \
+            linkedInClientSecret="${LINKEDIN_CLIENT_SECRET:-}" \
+            linkedInRedirectUri="${LINKEDIN_REDIRECT_URI:-}"
