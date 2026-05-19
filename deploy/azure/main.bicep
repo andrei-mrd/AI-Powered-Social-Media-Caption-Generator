@@ -77,6 +77,8 @@ var appDomain = managedEnvironment.properties.defaultDomain
 var apiOrigin = 'https://${apiAppName}.${appDomain}'
 var aiOrigin = 'https://${aiAppName}.${appDomain}'
 var frontendOrigin = 'https://${frontendAppName}.${appDomain}'
+var apiInternalOrigin = 'http://${apiAppName}'
+var aiInternalOrigin = 'http://${aiAppName}'
 var storageKey = listKeys(storage.id, '2023-01-01').keys[0].value
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storageKey};EndpointSuffix=${environment().suffixes.storage}'
 var mediaPublicBaseUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/${mediaContainerName}'
@@ -354,7 +356,7 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'AiService__BaseUrl'
-              value: aiOrigin
+              value: aiInternalOrigin
             }
             {
               name: 'AiService__HealthPath'
@@ -498,7 +500,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'API_UPSTREAM'
-              value: apiOrigin
+              value: apiInternalOrigin
             }
           ]
           resources: {
