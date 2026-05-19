@@ -6,16 +6,6 @@ type StripeRedirect = {
 };
 
 export async function startStripeCheckout(planSlug: string): Promise<void> {
-  const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
-  if (!publishableKey) {
-    throw new Error('Stripe publishable key is not configured.');
-  }
-
-  const stripe = await loadStripe(publishableKey);
-  if (!stripe) {
-    throw new Error('Unable to initialize Stripe.');
-  }
-
   const res = await fetch('/api/payments/checkout-session', {
     method: 'POST',
     credentials: 'include',
@@ -36,6 +26,17 @@ export async function startStripeCheckout(planSlug: string): Promise<void> {
   }
 
   sessionStorage.setItem('pendingPlanSlug', planSlug);
+
+  const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+  if (!publishableKey) {
+    throw new Error('Stripe checkout URL missing and publishable key is not configured.');
+  }
+
+  const stripe = await loadStripe(publishableKey);
+  if (!stripe) {
+    throw new Error('Unable to initialize Stripe.');
+  }
+
   const redirect = (stripe as unknown as StripeRedirect).redirectToCheckout;
   if (!redirect) {
     throw new Error('Stripe checkout URL missing and redirect API unavailable.');
